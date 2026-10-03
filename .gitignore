@@ -1,0 +1,19 @@
+.gradle/
+build/
+app/build/
+local.properties
+*.jks
+keystore.properties
+.idea/
+*.iml
+
+# Non pubblici
+*.apk
+*.zip
+.android-keys*
+docs/RICERCA.md
+docs/superpowers/
+.superpowers/
+avvia-emulatore.cmd
+.vscode/
+.kotlin/

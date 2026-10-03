@@ -1,0 +1,12 @@
+<resources>
+    <!-- Window and splash background before the first frame. values-night has the dark one. -->
+    <color name="splash_bg">@color/splash_light</color>
+    <color name="splash_light">#F6F3EC</color>
+    <color name="splash_dark">#111714</color>
+    <color name="widget_bg">#F6F3EC</color>
+    <color name="widget_text">#1B2420</color>
+    <color name="widget_text_muted">#5B6660</color>
+    <color name="widget_accent">#1E5E4A</color>
+    <color name="widget_on_accent">#FFFFFF</color>
+    <color name="icon_bg">#1E5E4A</color>
+</resources>

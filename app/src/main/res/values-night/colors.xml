@@ -1,0 +1,8 @@
+<resources>
+    <color name="splash_bg">@color/splash_dark</color>
+    <color name="widget_bg">#1B2420</color>
+    <color name="widget_text">#EEF2EF</color>
+    <color name="widget_text_muted">#A9B4AE</color>
+    <color name="widget_accent">#7FD1B0</color>
+    <color name="widget_on_accent">#0B2A1F</color>
+</resources>
