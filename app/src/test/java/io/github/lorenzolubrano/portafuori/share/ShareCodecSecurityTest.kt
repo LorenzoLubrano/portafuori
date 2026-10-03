@@ -134,11 +134,13 @@ class ShareCodecSecurityTest {
     }
 
     @Test fun oldMastelloCodesAreRejectedPolitely() {
-        // A 1.0.5 code: old prefix + old envelope name. It must fail with the friendly message, never crash.
-        val old = "MASTELLO1:" + code(env("""{"name":"x","bins":[$bin]}""")).removePrefix("PORTAFUORI1:")
-        val e = runCatching { ShareCodec.decode(old) }.exceptionOrNull()
-        assertTrue("atteso InvalidImport, arrivato $e", e is InvalidImport)
+        // A real 1.0.5 QR: old prefix around a compressed old envelope. It must fail with the friendly message, never crash.
         val oldEnvelope = """{"app":"mastello","kind":"profile","exportedAt":0,"profiles":[{"name":"x","bins":[$bin]}]}"""
+        val oldQr = "MASTELLO1:" + code(oldEnvelope).removePrefix("PORTAFUORI1:")
+        val e = runCatching { ShareCodec.decode(oldQr) }.exceptionOrNull()
+        assertTrue("atteso InvalidImport, arrivato $e", e is InvalidImport)
+        assertEquals("Non è un calendario di ${Brand.NAME}", e?.message)
+        // A 1.0.5 backup file: the same envelope as plain JSON.
         val e2 = runCatching { ShareCodec.decode(oldEnvelope) }.exceptionOrNull()
         assertEquals("Non è un calendario di ${Brand.NAME}", e2?.message)
     }
