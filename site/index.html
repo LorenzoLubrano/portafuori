@@ -129,7 +129,7 @@
   ol.steps strong { display: block; }
   ol.steps img {
     display: block; margin-top: 10px;
-    width: min(240px, 100%); height: auto;
+    width: min(360px, 100%); height: auto;
     border: 1px solid var(--line); border-radius: 14px;
   }
   .why { color: var(--text-soft); }
@@ -193,11 +193,19 @@
   <section id="installa">
     <h2>Come si installa</h2>
     <ol class="steps">
-      <li><strong>Tocca «Scarica Portafuori»</strong> e, quando il download è finito, apri il file <em>Portafuori.apk</em> dalla notifica o dalla cartella Download.</li>
-      <li><strong>Consenti l'installazione da questa fonte.</strong> Android ti porta in un'impostazione: attiva l'interruttore per il browser che hai usato, poi torna indietro.</li>
-      <li><strong>Tocca «Installa».</strong> Alla fine apri Portafuori e segui i passaggi per inserire il tuo calendario.</li>
+      <li><strong>Tocca «Scarica Portafuori».</strong> Il browser avvisa che il file potrebbe essere dannoso: tocca «Scarica comunque».
+        <img src="img/install-1.png" width="600" height="263" loading="lazy" alt="Avviso del browser: Potrebbe essere dannoso. Scaricare comunque Portafuori.apk? Con i pulsanti Annulla e Scarica comunque"></li>
+      <li><strong>Apri il file <em>Portafuori.apk</em></strong> dalla notifica del download o dall'elenco dei download del browser. La prima volta Android chiede un'autorizzazione: tocca «Impostazioni».
+        <img src="img/install-2.png" width="600" height="420" loading="lazy" alt="Finestra Autorizzazione necessaria: il telefono non è autorizzato a installare app sconosciute da questa origine. Pulsanti Annulla e Impostazioni"></li>
+      <li><strong>Attiva «Concedi autorizzazione»</strong> per il browser che hai usato (su alcuni telefoni si chiama «Consenti da questa fonte»). Poi torna indietro e riapri il file.
+        <img src="img/install-3.png" width="600" height="425" loading="lazy" alt="Impostazione Installa app sconosciute per il browser, con l'interruttore Concedi autorizzazione acceso"></li>
+      <li><strong>Tocca «Installa».</strong>
+        <img src="img/install-4.png" width="600" height="288" loading="lazy" alt="Finestra Vuoi installare l'app? Portafuori, con i pulsanti Annulla e Installa"></li>
+      <li><strong>Se compare Google Play Protect,</strong> tocca «Altri dettagli» e poi «Installa comunque». Alla fine apri Portafuori e segui i passaggi per inserire il tuo calendario.
+        <img src="img/install-5.png" width="600" height="741" loading="lazy" alt="Finestra di Google Play Protect: App bloccata per proteggere il tuo dispositivo. Sotto Altri dettagli compare il link Installa comunque"></li>
     </ol>
-    <p class="why">Android avvisa perché l'app non arriva dal Play Store. Il codice è pubblico: chiunque può controllarlo.</p>
+    <p class="why">Android e Play Protect avvisano perché l'app non arriva dal Play Store e il suo autore è nuovo, non perché abbiano trovato qualcosa. Il codice è pubblico: chiunque può controllarlo.</p>
+    <p class="why">Su Samsung, se l'installazione viene bloccata dal Blocco automatico, disattivalo per un momento in Impostazioni › Sicurezza e privacy › Blocco automatico, e riattivalo dopo.</p>
   </section>
 
   <section id="sicura">
