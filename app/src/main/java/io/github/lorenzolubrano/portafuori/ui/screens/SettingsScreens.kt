@@ -2,8 +2,6 @@ package io.github.lorenzolubrano.portafuori.ui.screens
 
 import io.github.lorenzolubrano.portafuori.data.Limits
 import io.github.lorenzolubrano.portafuori.Brand
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,6 +53,7 @@ import io.github.lorenzolubrano.portafuori.ui.SectionTitle
 import io.github.lorenzolubrano.portafuori.ui.TimeField
 import io.github.lorenzolubrano.portafuori.ui.UiState
 import io.github.lorenzolubrano.portafuori.ui.okColor
+import io.github.lorenzolubrano.portafuori.ui.dial
 import io.github.lorenzolubrano.portafuori.ui.openLink
 
 @Composable
@@ -183,7 +182,9 @@ fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     phones.take(3).forEach { n ->
-                        OutlinedButton(onClick = { context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + n.filter { it.isDigit() || it == '+' }))) }) {
+                        OutlinedButton(onClick = {
+                            if (!dial(context, n.filter { it.isDigit() || it == '+' })) vm.message = "Nessuna app per telefonare: il numero è $n"
+                        }) {
                             Icon(Icons.Filled.Call, contentDescription = null)
                             Spacer(Modifier.width(6.dp))
                             Text(n)

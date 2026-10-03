@@ -17,3 +17,6 @@ docs/superpowers/
 avvia-emulatore.cmd
 .vscode/
 .kotlin/
+*.aab
+*.keystore
+*.idsig
