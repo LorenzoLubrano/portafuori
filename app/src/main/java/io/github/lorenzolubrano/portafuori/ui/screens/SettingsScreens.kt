@@ -283,7 +283,11 @@ fun InfoScreen(vm: MainViewModel) {
                     if (!openLink(context, Brand.SOURCE_URL)) vm.message = "Nessun browser per aprire github.com/LorenzoLubrano/portafuori"
                 }) { Text("Codice sorgente") }
                 Spacer(Modifier.height(8.dp))
-                Text("AndroidX e Jetpack Compose, Kotlin, kotlinx.serialization, ZXing: Apache License 2.0.", style = MaterialTheme.typography.bodySmall)
+                Text(
+                    "AndroidX e Jetpack Compose, Kotlin, kotlinx.serialization, ZXing e le icone Material Symbols: Apache License 2.0. " +
+                        "Il carattere Atkinson Hyperlegible Next: SIL Open Font License 1.1.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
         }
         item {
