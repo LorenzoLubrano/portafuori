@@ -2,6 +2,7 @@ package io.github.lorenzolubrano.portafuori.ui.calendar
 
 import io.github.lorenzolubrano.portafuori.data.ProfileBundle
 import io.github.lorenzolubrano.portafuori.rules.Occurrence
+import io.github.lorenzolubrano.portafuori.rules.Schedule
 import io.github.lorenzolubrano.portafuori.rules.Status
 import java.time.LocalDate
 
@@ -34,6 +35,13 @@ object CalendarModel {
 
     /** How many bins a month cell hides behind "+N": with more than [MAX_ROUNDELS] it shows MAX_ROUNDELS - 1 roundels. */
     fun overflow(count: Int): Int = if (count > MAX_ROUNDELS) count - (MAX_ROUNDELS - 1) else 0
+
+    /** The calendar date whose bins go out on [evening]: what the day sheet opens, even on an evening with nothing on it. */
+    fun calendarDateOf(b: ProfileBundle, evening: LocalDate): LocalDate {
+        val next = evening.plusDays(1)
+        val collection = if (b.eveningOf(next) == evening) next else evening
+        return Schedule.calendarDate(b.rules, collection)
+    }
 
     /**
      * Nights whose evening falls in [from, to]. A collection goes out at most the evening before,

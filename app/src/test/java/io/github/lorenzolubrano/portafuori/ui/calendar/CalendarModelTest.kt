@@ -5,6 +5,7 @@ import io.github.lorenzolubrano.portafuori.data.BinEntity
 import io.github.lorenzolubrano.portafuori.data.ExceptionEntity
 import io.github.lorenzolubrano.portafuori.data.ProfileBundle
 import io.github.lorenzolubrano.portafuori.data.ProfileEntity
+import io.github.lorenzolubrano.portafuori.rules.CalendarMode
 import io.github.lorenzolubrano.portafuori.rules.ExceptionKind
 import io.github.lorenzolubrano.portafuori.rules.ExposureMode
 import io.github.lorenzolubrano.portafuori.rules.Rule
@@ -66,5 +67,15 @@ class CalendarModelTest {
         // a month cell has 4 places: 3 roundels + "+4"
         assertEquals(4, CalendarModel.overflow(wed.activeBinIds.size))
         assertEquals(0, CalendarModel.overflow(4))
+    }
+
+    /** An evening with nothing on it still opens its day sheet (extra collections), on the calendar date its bins would have. */
+    @Test fun emptyEveningOpensItsCalendarDate() {
+        val fri9 = LocalDate.of(2026, 10, 9)
+        assertEquals(LocalDate.of(2026, 10, 10), CalendarModel.calendarDateOf(bundle(), fri9))
+        val morning = ProfileEntity(id = 1, name = "Casa", exposureMode = ExposureMode.SAME_MORNING, exposeStart = LocalTime.of(5, 0), exposeEnd = LocalTime.of(8, 0))
+        assertEquals(fri9, CalendarModel.calendarDateOf(bundle(profile = morning), fri9))
+        val exposeDay = ProfileEntity(id = 1, name = "Casa", calendarMode = CalendarMode.EXPOSE_DAY)
+        assertEquals(fri9, CalendarModel.calendarDateOf(bundle(profile = exposeDay), fri9))
     }
 }
