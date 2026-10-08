@@ -58,14 +58,13 @@ import io.github.lorenzolubrano.portafuori.rules.ROME
 import io.github.lorenzolubrano.portafuori.ui.Banner
 import io.github.lorenzolubrano.portafuori.ui.BinPills
 import io.github.lorenzolubrano.portafuori.ui.Card
-import io.github.lorenzolubrano.portafuori.ui.Kicker
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
 import io.github.lorenzolubrano.portafuori.ui.Screen
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
 import io.github.lorenzolubrano.portafuori.ui.Tone
 import io.github.lorenzolubrano.portafuori.ui.UiState
-import io.github.lorenzolubrano.portafuori.ui.okColor
+import io.github.lorenzolubrano.portafuori.ui.theme.okColor
 import io.github.lorenzolubrano.portafuori.widget.TonightWidget
 import java.time.LocalDate
 import kotlinx.coroutines.delay
@@ -167,7 +166,7 @@ private fun TonightCard(vm: MainViewModel, e: Evening?, now: Long, noRules: Bool
         Column(Modifier.padding(20.dp)) {
             when {
                 noRules -> {
-                    Text("PER INIZIARE", style = Kicker, color = MaterialTheme.colorScheme.primary)
+                    Text("PER INIZIARE", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(8.dp))
                     Text("Aggiungi i giorni di raccolta", style = MaterialTheme.typography.headlineSmall)
                     Spacer(Modifier.height(4.dp))
@@ -176,13 +175,13 @@ private fun TonightCard(vm: MainViewModel, e: Evening?, now: Long, noRules: Bool
                     Button(onClick = { vm.switchTab(Screen.Bins) }) { Text("Vai ai bidoni") }
                 }
                 e == null -> {
-                    Text("STASERA", style = Kicker, color = MaterialTheme.colorScheme.primary)
+                    Text("STASERA", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(8.dp))
                     Text("Niente da esporre", style = MaterialTheme.typography.displaySmall)
                     Text("Nessun ritiro nelle prossime 3 settimane.", style = MaterialTheme.typography.bodyMedium)
                 }
                 tonight -> {
-                    Text(Planner.label(e, now).uppercase(), style = Kicker, color = MaterialTheme.colorScheme.primary)
+                    Text(Planner.label(e, now).uppercase(), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(12.dp))
                     BinPills(e.bins, large = true)
                     Spacer(Modifier.height(12.dp))
@@ -214,7 +213,7 @@ private fun TonightCard(vm: MainViewModel, e: Evening?, now: Long, noRules: Bool
                     }
                 }
                 else -> {
-                    Text("STASERA", style = Kicker, color = MaterialTheme.colorScheme.primary)
+                    Text("STASERA", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(8.dp))
                     Text("Niente da esporre", style = MaterialTheme.typography.displaySmall)
                     Spacer(Modifier.height(12.dp))

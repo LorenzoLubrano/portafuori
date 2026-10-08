@@ -52,7 +52,7 @@ import io.github.lorenzolubrano.portafuori.ui.Screen
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
 import io.github.lorenzolubrano.portafuori.ui.TimeField
 import io.github.lorenzolubrano.portafuori.ui.UiState
-import io.github.lorenzolubrano.portafuori.ui.okColor
+import io.github.lorenzolubrano.portafuori.ui.theme.okColor
 import io.github.lorenzolubrano.portafuori.ui.dial
 import io.github.lorenzolubrano.portafuori.ui.openLink
 

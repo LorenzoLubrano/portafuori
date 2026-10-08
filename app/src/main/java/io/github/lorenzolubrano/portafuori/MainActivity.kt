@@ -25,7 +25,9 @@ import io.github.lorenzolubrano.portafuori.data.ThemeMode
 import io.github.lorenzolubrano.portafuori.reminders.Notifications
 import io.github.lorenzolubrano.portafuori.ui.AppRoot
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
-import io.github.lorenzolubrano.portafuori.ui.PortafuoriTheme
+import io.github.lorenzolubrano.portafuori.ui.theme.PortafuoriTheme
+import io.github.lorenzolubrano.portafuori.ui.theme.Styles
+import io.github.lorenzolubrano.portafuori.ui.theme.lightBarIcons
 import io.github.lorenzolubrano.portafuori.ui.Screen
 
 // Same scrims androidx.activity uses by default for 3-button navigation
@@ -57,7 +59,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
-        darkBars = when (cachedTheme) {
+        darkBars = if (lightBarIcons(Styles.current, dark = false)) true else when (cachedTheme) {
             ThemeMode.SYSTEM -> null
             ThemeMode.LIGHT -> false
             ThemeMode.DARK -> true
@@ -76,9 +78,10 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.LIGHT -> false
                 ThemeMode.DARK -> true
             }
-            // System bar icons follow the in-app theme, not only the system one
-            DisposableEffect(dark) {
-                darkBars = dark
+            // System bar icons follow the in-app theme and the style's shell, not only the system theme
+            val lightIcons = lightBarIcons(Styles.current, dark)
+            DisposableEffect(lightIcons) {
+                darkBars = lightIcons
                 enableEdgeToEdge(statusBarStyle, navigationBarStyle)
                 onDispose {}
             }

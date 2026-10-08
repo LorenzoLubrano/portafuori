@@ -1,19 +1,15 @@
-package io.github.lorenzolubrano.portafuori.ui
+package io.github.lorenzolubrano.portafuori.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import io.github.lorenzolubrano.portafuori.data.ThemeMode
 
-// Warm "paper" neutrals so the bin colours carry the meaning; bottle green as the brand.
-private val Light = lightColorScheme(
+// The look before «Linee» (1.0.x): warm "paper" neutrals and bottle green. Kept as the «Standard» style for phase two.
+private val StandardLight = lightColorScheme(
     primary = Color(0xFF1E5E4A),
     onPrimary = Color.White,
     primaryContainer = Color(0xFFCDEBDD),
@@ -44,7 +40,7 @@ private val Light = lightColorScheme(
     outlineVariant = Color(0xFFD3D0C6),
 )
 
-private val Dark = darkColorScheme(
+private val StandardDark = darkColorScheme(
     primary = Color(0xFF7FD1B0),
     onPrimary = Color(0xFF003826),
     primaryContainer = Color(0xFF0F4A38),
@@ -76,7 +72,7 @@ private val Dark = darkColorScheme(
 )
 
 private val base = Typography()
-private val AppTypography = base.copy(
+private val StandardType = base.copy(
     displaySmall = base.displaySmall.copy(fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp),
     headlineMedium = base.headlineMedium.copy(fontWeight = FontWeight.Bold),
     headlineSmall = base.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
@@ -85,20 +81,12 @@ private val AppTypography = base.copy(
     labelLarge = base.labelLarge.copy(fontWeight = FontWeight.SemiBold),
 )
 
-val Kicker = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
-
-@Composable
-fun PortafuoriTheme(mode: ThemeMode, content: @Composable () -> Unit) {
-    val dark = when (mode) {
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
-    }
-    MaterialTheme(colorScheme = if (dark) Dark else Light, typography = AppTypography, content = content)
-}
-
-/** Success green that works on both themes. */
-@Composable
-fun okColor(): Color = if (MaterialTheme.colorScheme.background.luminanceIsDark()) Color(0xFF7FD1B0) else Color(0xFF1E7A55)
-
-private fun Color.luminanceIsDark() = (0.299 * red + 0.587 * green + 0.114 * blue) < 0.5
+val StandardStyle = PortafuoriStyle(
+    name = "Standard",
+    light = StandardLight,
+    dark = StandardDark,
+    lightExtra = ExtraColors(shell = Color(0xFFF6F3EC), onShell = Color(0xFF1B2420), line = Color(0xFFD3D0C6), stationFrame = Color(0xFFCDEBDD), success = Color(0xFF1E7A55)),
+    darkExtra = ExtraColors(shell = Color(0xFF111714), onShell = Color(0xFFE3E8E4), line = Color(0xFF3F4944), stationFrame = Color(0xFF0F4A38), success = Color(0xFF7FD1B0)),
+    typography = StandardType,
+    shapes = Shapes(),
+)

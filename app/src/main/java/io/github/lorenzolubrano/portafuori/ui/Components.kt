@@ -164,7 +164,7 @@ enum class Tone { Error, Warn, Info }
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
     Text(
         text.uppercase(),
-        style = Kicker,
+        style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.primary,
         modifier = modifier.padding(top = 20.dp, bottom = 8.dp),
     )

@@ -41,7 +41,7 @@ import io.github.lorenzolubrano.portafuori.ui.Card
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
-import io.github.lorenzolubrano.portafuori.ui.okColor
+import io.github.lorenzolubrano.portafuori.ui.theme.okColor
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
