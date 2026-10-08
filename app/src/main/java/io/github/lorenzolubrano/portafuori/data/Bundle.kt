@@ -112,6 +112,9 @@ data class ProfileBundle(
 
     fun bin(id: Long) = binById[id]
 
+    /** The evening (or morning) a collection's bins go out: the app's one clock. */
+    fun eveningOf(collection: LocalDate): LocalDate = Schedule.exposureWindow(rules, collection).start.toLocalDate()
+
     fun occurrences(from: LocalDate, to: LocalDate): List<Occurrence> = Schedule.compute(
         rules,
         bins.map { BinRules(it.id, it.rules) },
