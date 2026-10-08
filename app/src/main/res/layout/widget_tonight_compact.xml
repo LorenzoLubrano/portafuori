@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- One row high: the roundels sit beside the title, the names under it, no window line. Same ids as widget_tonight. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -7,9 +8,9 @@
     android:orientation="vertical"
     android:gravity="center_vertical"
     android:paddingStart="14dp"
-    android:paddingEnd="10dp"
-    android:paddingTop="8dp"
-    android:paddingBottom="10dp">
+    android:paddingEnd="8dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -19,14 +20,23 @@
 
         <TextView
             android:id="@+id/widget_title"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
             android:textColor="@color/widget_text"
             android:textSize="16sp"
             android:textStyle="bold"
             android:maxLines="1"
             android:ellipsize="end" />
+
+        <ImageView
+            android:id="@+id/widget_roundels"
+            android:layout_width="0dp"
+            android:layout_height="24dp"
+            android:layout_weight="1"
+            android:adjustViewBounds="true"
+            android:scaleType="fitStart"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/widget_done"
@@ -45,22 +55,12 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/widget_roundels"
-        android:layout_width="wrap_content"
-        android:layout_height="32dp"
-        android:layout_marginTop="2dp"
-        android:adjustViewBounds="true"
-        android:scaleType="fitStart"
-        android:visibility="gone" />
-
     <TextView
         android:id="@+id/widget_bins"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
         android:textColor="@color/widget_text"
-        android:textSize="16sp"
+        android:textSize="15sp"
         android:textStyle="bold"
         android:maxLines="2"
         android:ellipsize="end" />
@@ -69,8 +69,5 @@
         android:id="@+id/widget_sub"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/widget_text_muted"
-        android:textSize="12sp"
-        android:maxLines="2"
-        android:ellipsize="end" />
+        android:visibility="gone" />
 </LinearLayout>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Linee station: enamel with a thick ink frame -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <solid android:color="@color/widget_bg" />
+    <stroke android:width="3dp" android:color="@color/widget_text" />
     <corners android:radius="20dp" />
 </shape>

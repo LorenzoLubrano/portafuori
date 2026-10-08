@@ -1,8 +1,8 @@
 <resources>
     <color name="splash_bg">@color/splash_dark</color>
-    <color name="widget_bg">#1B2420</color>
-    <color name="widget_text">#EEF2EF</color>
-    <color name="widget_text_muted">#A9B4AE</color>
-    <color name="widget_accent">#7FD1B0</color>
-    <color name="widget_on_accent">#0B2A1F</color>
+    <color name="widget_bg">#0B1630</color>
+    <color name="widget_text">#EEF2F9</color>
+    <color name="widget_text_muted">#A9B4CA</color>
+    <color name="widget_accent">#EEF2F9</color>
+    <color name="widget_on_accent">#0B1630</color>
 </resources>

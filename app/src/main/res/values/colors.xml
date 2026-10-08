@@ -3,10 +3,10 @@
     <color name="splash_bg">@color/splash_light</color>
     <color name="splash_light">#F3F5F9</color>
     <color name="splash_dark">#0B1630</color>
-    <color name="widget_bg">#F6F3EC</color>
-    <color name="widget_text">#1B2420</color>
-    <color name="widget_text_muted">#5B6660</color>
-    <color name="widget_accent">#1E5E4A</color>
-    <color name="widget_on_accent">#FFFFFF</color>
+    <color name="widget_bg">#F3F5F9</color>
+    <color name="widget_text">#0E1A33</color>
+    <color name="widget_text_muted">#4A5671</color>
+    <color name="widget_accent">#0E1A33</color>
+    <color name="widget_on_accent">#F3F5F9</color>
     <color name="icon_bg">#1E5E4A</color>
 </resources>

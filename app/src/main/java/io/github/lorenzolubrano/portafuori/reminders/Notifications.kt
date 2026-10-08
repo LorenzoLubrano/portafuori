@@ -71,7 +71,7 @@ object Notifications {
         val text = if (late && s.kind != SlotKind.TEST) "In ritardo. ${s.text}" else s.text
         val b = NotificationCompat.Builder(context, channel)
             .setSmallIcon(R.drawable.ic_notification)
-            .setColor(0xFF1E5E4A.toInt())
+            .setColor(0xFF0E1A33.toInt())
             .setContentTitle(s.title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
