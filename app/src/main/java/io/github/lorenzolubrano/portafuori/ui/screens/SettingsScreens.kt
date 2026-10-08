@@ -7,13 +7,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -41,6 +45,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.lorenzolubrano.portafuori.BuildConfig
 import io.github.lorenzolubrano.portafuori.data.ProfileEntity
@@ -52,9 +58,12 @@ import io.github.lorenzolubrano.portafuori.rules.It
 import io.github.lorenzolubrano.portafuori.ui.Card
 import io.github.lorenzolubrano.portafuori.ui.ChoiceChips
 import io.github.lorenzolubrano.portafuori.ui.DateField
+import io.github.lorenzolubrano.portafuori.ui.GroupDivider
+import io.github.lorenzolubrano.portafuori.ui.GroupRow
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
 import io.github.lorenzolubrano.portafuori.ui.ProfileSwitcher
+import io.github.lorenzolubrano.portafuori.ui.RowGroup
 import io.github.lorenzolubrano.portafuori.ui.Screen
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
 import io.github.lorenzolubrano.portafuori.ui.SegmentedChoice
@@ -70,46 +79,56 @@ fun MoreScreen(vm: MainViewModel, state: UiState) {
     val rel = vm.reliability
     Page(title = "Altro", actions = { ProfileSwitcher(vm, state) }) {
         item {
-            MenuRow(
-                Icons.Filled.NotificationsActive, "Affidabilità dei promemoria",
-                if (rel.allGood) "Tutto a posto" else "Da controllare", if (rel.allGood) okColor() else MaterialTheme.colorScheme.tertiary,
-            ) { vm.open(Screen.Reliability) }
+            RowGroup {
+                MenuRow(
+                    Icons.Filled.NotificationsActive, "Affidabilità dei promemoria",
+                    if (rel.allGood) "Tutto a posto" else "Da controllare", if (rel.allGood) okColor() else MaterialTheme.colorScheme.tertiary,
+                ) { vm.open(Screen.Reliability) }
+                GroupDivider()
+                MenuRow(Icons.Filled.EventBusy, "Festività ed eccezioni", "Festivi, patrono, ritiri spostati") { vm.open(Screen.Holidays) }
+                GroupDivider()
+                MenuRow(Icons.Filled.QrCode2, "Condividi e backup", "QR per i vicini, file di backup") { vm.open(Screen.Share) }
+                GroupDivider()
+                MenuRow(Icons.Filled.Tune, "Impostazioni di «${state.selected?.profile?.name}»", "Orari, avvisi, pausa vacanza, note") { vm.open(Screen.ProfileSettings) }
+                GroupDivider()
+                MenuRow(Icons.Filled.AddHome, "Aggiungi una casa", "Seconda casa, casa dei genitori…") { vm.startWizard(first = false) }
+            }
         }
-        item { MenuRow(Icons.Filled.EventBusy, "Festività ed eccezioni", "Festivi, patrono, ritiri spostati") { vm.open(Screen.Holidays) } }
-        item { MenuRow(Icons.Filled.QrCode2, "Condividi e backup", "QR per i vicini, file di backup") { vm.open(Screen.Share) } }
-        item { MenuRow(Icons.Filled.Tune, "Impostazioni di «${state.selected?.profile?.name}»", "Orari, avvisi, pausa vacanza, note") { vm.open(Screen.ProfileSettings) } }
-        item { MenuRow(Icons.Filled.AddHome, "Aggiungi una casa", "Seconda casa, casa dei genitori…") { vm.startWizard(first = false) } }
         item { SectionTitle("Tema") }
         item {
             val modes = listOf(ThemeMode.SYSTEM to "Come il telefono", ThemeMode.LIGHT to "Chiaro", ThemeMode.DARK to "Scuro")
             SegmentedChoice(modes.map { it.second }, selected = modes.indexOfFirst { it.first == state.settings.theme }) { vm.setTheme(modes[it].first) }
         }
         item { SectionTitle("Informazioni") }
-        item { MenuRow(Icons.Filled.Info, "Info e privacy", "Versione ${BuildConfig.VERSION_NAME} · nessun dato lascia il telefono") { vm.open(Screen.Info) } }
+        item { RowGroup { MenuRow(Icons.Filled.Info, "Info e privacy", "Versione ${BuildConfig.VERSION_NAME} · nessun dato lascia il telefono") { vm.open(Screen.Info) } } }
     }
 }
 
 @Composable
 fun MenuRow(icon: ImageVector, title: String, subtitle: String, subtitleColor: androidx.compose.ui.graphics.Color? = null, onClick: () -> Unit) {
-    Card(onClick = onClick) {
-        Row(Modifier.heightIn(min = 64.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer),
-                contentAlignment = Alignment.Center,
-            ) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer) }
-            Spacer(Modifier.width(16.dp))
-            Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
-                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = subtitleColor ?: MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Spacer(Modifier.width(8.dp))
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    GroupRow(onClick = onClick) {
+        Box(
+            Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer),
+            contentAlignment = Alignment.Center,
+        ) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer) }
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = subtitleColor ?: MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        Spacer(Modifier.width(8.dp))
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+}
+
+@Composable
+private fun GroupLabel(text: String) {
+    Text(text, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp).semantics { heading() })
 }
 
 private val PHONE = Regex("""(?:\+39\s?)?(?:\d[\s.]?){6,11}\d""")
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
     val b = state.selected ?: return
@@ -118,14 +137,15 @@ fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
     val p = vm.profileDraft?.takeIf { it.id == b.profile.id } ?: b.profile
     fun set(x: ProfileEntity) { vm.profileDraft = x }
     var confirmDelete by remember { mutableStateOf(false) }
+    var confirmExit by remember { mutableStateOf(false) }
     val dirty = p != b.profile
     fun leave(save: Boolean) {
         if (save && dirty) vm.updateProfile(p)
         vm.profileDraft = null
         vm.back()
     }
-    // system back leaves without saving, as before; the arrow and «Salva» save
-    BackHandler { leave(save = false) }
+    // system back asks before dropping unsaved edits, like the bin editor; the arrow and «Salva» save
+    BackHandler { if (dirty) confirmExit = true else leave(save = false) }
 
     Page(
         title = "Impostazioni",
@@ -139,12 +159,20 @@ fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
             OutlinedTextField(p.areaNote, { set(p.copy(areaNote = it.take(Limits.AREA))) }, label = { Text("Zona o via") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         }
         item { SectionTitle("Calendario") }
+        // two separate single choices: each gets the wizard's own title, so two ticked circles never look like one list
         item {
-            RadioLine("Indica il giorno del ritiro", p.calendarMode == CalendarMode.COLLECTION_DAY) { set(p.copy(calendarMode = CalendarMode.COLLECTION_DAY)) }
-            RadioLine("Indica la sera in cui esporre", p.calendarMode == CalendarMode.EXPOSE_DAY) { set(p.copy(calendarMode = CalendarMode.EXPOSE_DAY)) }
-            Spacer(Modifier.height(8.dp))
-            RadioLine("Si espone la sera prima", p.exposureMode == ExposureMode.EVENING_BEFORE) { set(p.copy(exposureMode = ExposureMode.EVENING_BEFORE)) }
-            RadioLine("Si espone la mattina stessa", p.exposureMode == ExposureMode.SAME_MORNING) { set(p.copy(exposureMode = ExposureMode.SAME_MORNING)) }
+            Column(Modifier.selectableGroup()) {
+                GroupLabel("Il tuo calendario indica…")
+                RadioLine("Indica il giorno del ritiro", p.calendarMode == CalendarMode.COLLECTION_DAY) { set(p.copy(calendarMode = CalendarMode.COLLECTION_DAY)) }
+                RadioLine("Indica la sera in cui esporre", p.calendarMode == CalendarMode.EXPOSE_DAY) { set(p.copy(calendarMode = CalendarMode.EXPOSE_DAY)) }
+            }
+        }
+        item {
+            Column(Modifier.selectableGroup()) {
+                GroupLabel("Quando si espone il bidone?")
+                RadioLine("Si espone la sera prima", p.exposureMode == ExposureMode.EVENING_BEFORE) { set(p.copy(exposureMode = ExposureMode.EVENING_BEFORE)) }
+                RadioLine("Si espone la mattina stessa", p.exposureMode == ExposureMode.SAME_MORNING) { set(p.copy(exposureMode = ExposureMode.SAME_MORNING)) }
+            }
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -176,10 +204,11 @@ fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
         item {
             Text("Niente avvisi in questi giorni: il calendario resta com'è.", style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            // wraps instead of squeezing: two full dates and «Togli» do not fit one line at large text
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 DateField("Dal", p.pausedFrom) { set(p.copy(pausedFrom = it, pausedTo = p.pausedTo ?: it.plusDays(7))) }
                 DateField("Al", p.pausedTo) { set(p.copy(pausedTo = it)) }
-                if (p.pausedFrom != null) TextButton(onClick = { set(p.copy(pausedFrom = null, pausedTo = null)) }) { Text("Togli") }
+                if (p.pausedFrom != null) TextButton(onClick = { set(p.copy(pausedFrom = null, pausedTo = null)) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Togli") }
             }
         }
         item { SectionTitle("Note") }
@@ -192,7 +221,7 @@ fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
         val phones = PHONE.findAll(p.notes).map { it.value.trim() }.distinct().toList()
         if (phones.isNotEmpty()) {
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     phones.take(3).forEach { n ->
                         OutlinedButton(onClick = {
                             if (!dial(context, n.filter { it.isDigit() || it == '+' })) vm.message = "Nessuna app per telefonare: il numero è $n"
@@ -209,6 +238,15 @@ fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
         item {
             OutlinedButton(onClick = { confirmDelete = true }) { Text("Elimina «${b.profile.name}»", color = MaterialTheme.colorScheme.error) }
         }
+    }
+    if (confirmExit) {
+        AlertDialog(
+            onDismissRequest = { confirmExit = false },
+            title = { Text("Uscire senza salvare?") },
+            text = { Text("Le modifiche andranno perse.") },
+            confirmButton = { TextButton(onClick = { confirmExit = false; leave(save = false) }) { Text("Esci") } },
+            dismissButton = { TextButton(onClick = { confirmExit = false }) { Text("Resta") } },
+        )
     }
     if (confirmDelete) {
         AlertDialog(

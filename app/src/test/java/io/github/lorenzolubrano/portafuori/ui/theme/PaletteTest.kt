@@ -27,4 +27,13 @@ class PaletteTest {
             }
         }
     }
+
+    /** Material draws switch, field, outlined-button and chip borders with outline: WCAG 1.4.11 wants 3:1. */
+    @Test fun controlBordersReach3to1() {
+        schemes.forEach { (name, s) ->
+            listOf(s.background, s.surfaceContainerLowest, s.surfaceContainerHighest).forEach { bg ->
+                assertTrue("$name outline su %08X".format(bg), Contrast.ratio(bg, s.outline) >= 3.0)
+            }
+        }
+    }
 }

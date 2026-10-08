@@ -51,7 +51,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.lorenzolubrano.portafuori.data.Evening
@@ -236,7 +238,8 @@ private fun TonightStop(vm: MainViewModel, e: Evening, now: Long) {
             val check by transition.animateFloat(transitionSpec = { spring(dampingRatio = Spring.DampingRatioMediumBouncy) }, label = "spunta") {
                 if (it == EnterExitState.PreEnter) 0.6f else 1f
             }
-            Row(Modifier.fillMaxWidth().heightIn(min = 60.dp), verticalAlignment = Alignment.CenterVertically) {
+            // the button TalkBack was on disappears: the new state is announced instead of leaving silence
+            Row(Modifier.fillMaxWidth().heightIn(min = 60.dp).semantics { liveRegion = LiveRegionMode.Polite }, verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     Modifier.size(32.dp).graphicsLayer { scaleX = check; scaleY = check }.clip(CircleShape).background(MaterialTheme.colorScheme.primary),
                     contentAlignment = Alignment.Center,

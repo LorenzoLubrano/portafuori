@@ -1,5 +1,6 @@
 package io.github.lorenzolubrano.portafuori.ui.screens
 
+import androidx.compose.runtime.key
 import io.github.lorenzolubrano.portafuori.data.Limits
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -70,10 +71,13 @@ import io.github.lorenzolubrano.portafuori.ui.Card
 import io.github.lorenzolubrano.portafuori.ui.ChoiceChips
 import io.github.lorenzolubrano.portafuori.ui.DateField
 import io.github.lorenzolubrano.portafuori.ui.DatePickDialog
+import io.github.lorenzolubrano.portafuori.ui.GroupDivider
+import io.github.lorenzolubrano.portafuori.ui.GroupRow
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
 import io.github.lorenzolubrano.portafuori.ui.ProfileSwitcher
 import io.github.lorenzolubrano.portafuori.ui.Roundel
+import io.github.lorenzolubrano.portafuori.ui.RowGroup
 import io.github.lorenzolubrano.portafuori.ui.Screen
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
 import io.github.lorenzolubrano.portafuori.ui.SwitchRow
@@ -103,22 +107,28 @@ fun BinsScreen(vm: MainViewModel, state: UiState) {
             )
         },
     ) {
-        items(b.bins, key = { it.id }) { bin ->
-            val next = remember(bin, b.exceptions) {
-                b.occurrences(today, today.plusDays(60)).filter { it.binId == bin.id && it.isActive }.take(3).map { It.weekdayDay(it.calendarDate) }
-            }
-            Card(onClick = { vm.open(Screen.BinEditor(bin.id)) }) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Roundel(bin)
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(bin.name, style = MaterialTheme.typography.titleMedium)
-                        Text(It.describeAll(bin.rules), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (next.isNotEmpty()) {
-                            Text("Prossimi: " + next.joinToString(", "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+        // the bins form one group of rows (spec: «elenco in un gruppo»)
+        if (b.bins.isNotEmpty()) item {
+            RowGroup {
+                b.bins.forEachIndexed { i, bin ->
+                    key(bin.id) {
+                        if (i > 0) GroupDivider()
+                        val next = remember(bin, b.exceptions) {
+                            b.occurrences(today, today.plusDays(60)).filter { it.binId == bin.id && it.isActive }.take(3).map { It.weekdayDay(it.calendarDate) }
+                        }
+                        GroupRow(onClick = { vm.open(Screen.BinEditor(bin.id)) }) {
+                            Roundel(bin)
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(bin.name, style = MaterialTheme.typography.titleMedium)
+                                Text(It.describeAll(bin.rules), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                if (next.isNotEmpty()) {
+                                    Text("Prossimi: " + next.joinToString(", "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                                }
+                            }
+                            Icon(Icons.Filled.Edit, contentDescription = "Modifica", tint = MaterialTheme.colorScheme.outline)
                         }
                     }
-                    Icon(Icons.Filled.Edit, contentDescription = "Modifica", tint = MaterialTheme.colorScheme.outline)
                 }
             }
         }
@@ -314,11 +324,15 @@ fun RuleEditorDialog(initial: Rule?, onDismiss: () -> Unit, onSave: (Rule) -> Un
     }
     var interval by rememberSaveable { mutableIntStateOf(initial?.intervalWeeks?.coerceAtLeast(2) ?: 2) }
     var anchor by rememberSaveable { mutableStateOf(initial?.anchor) }
-    var ordinals by remember { mutableStateOf(initial?.ordinals ?: setOf(1)) }
-    var dates by remember { mutableStateOf(initial?.dates ?: emptySet()) }
+    var ordinals by rememberSaveable(stateSaver = listSaver({ it.toList() }, { it.toSet() })) {
+        mutableStateOf(initial?.ordinals ?: setOf(1))
+    }
+    var dates by rememberSaveable(stateSaver = listSaver({ it.map(LocalDate::toEpochDay) }, { it.map(LocalDate::ofEpochDay).toSet() })) {
+        mutableStateOf(initial?.dates ?: emptySet())
+    }
     var seasonOn by rememberSaveable { mutableStateOf(initial?.seasonStart != null) }
-    var seasonStart by remember { mutableStateOf(initial?.seasonStart ?: MonthDay.of(5, 1)) }
-    var seasonEnd by remember { mutableStateOf(initial?.seasonEnd ?: MonthDay.of(10, 31)) }
+    var seasonStart by rememberSaveable { mutableStateOf(initial?.seasonStart ?: MonthDay.of(5, 1)) }
+    var seasonEnd by rememberSaveable { mutableStateOf(initial?.seasonEnd ?: MonthDay.of(10, 31)) }
     var validOn by rememberSaveable { mutableStateOf(initial?.validFrom != null || initial?.validUntil != null) }
     var validFrom by rememberSaveable { mutableStateOf(initial?.validFrom) }
     var validUntil by rememberSaveable { mutableStateOf(initial?.validUntil) }
@@ -406,7 +420,7 @@ fun RuleEditorDialog(initial: Rule?, onDismiss: () -> Unit, onSave: (Rule) -> Un
                 item { SwitchRow("Solo in un periodo dell'anno", seasonOn, { seasonOn = it }) }
                 if (seasonOn) {
                     item {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             OutlinedButton(onClick = { pickSeason = 0 }) { Text("Dal ${It.monthDay(seasonStart)}") }
                             OutlinedButton(onClick = { pickSeason = 1 }) { Text("Al ${It.monthDay(seasonEnd)}") }
                         }
@@ -415,7 +429,7 @@ fun RuleEditorDialog(initial: Rule?, onDismiss: () -> Unit, onSave: (Rule) -> Un
                 item { SwitchRow("Valida solo tra due date", validOn, { validOn = it }) }
                 if (validOn) {
                     item {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             DateField("Dal", validFrom) { validFrom = it }
                             DateField("Al", validUntil) { validUntil = it }
                         }

@@ -1,5 +1,10 @@
 package io.github.lorenzolubrano.portafuori.ui.screens
 
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.foundation.layout.windowInsetsPadding
 import io.github.lorenzolubrano.portafuori.data.Limits
 import io.github.lorenzolubrano.portafuori.Brand
 import android.Manifest
@@ -17,7 +22,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
@@ -91,14 +96,14 @@ fun WelcomeScreen(vm: MainViewModel) {
     // the status bar keeps Linee's shell behind it, so its light icons stay readable in the light theme
     Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars).background(extra().shell))
     Column(
-        Modifier.weight(1f).navigationBarsPadding().padding(24.dp).verticalScroll(rememberScrollState()),
+        Modifier.weight(1f).windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)).padding(24.dp).verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Center,
     ) {
         Spacer(Modifier.height(16.dp))
         Text(Brand.NAME, style = MaterialTheme.typography.displaySmall, modifier = Modifier.semantics { heading() })
         Spacer(Modifier.height(20.dp))
-        // an illustration, not content: TalkBack skips it
-        Column(Modifier.clearAndSetSemantics {}) {
+        // an illustration, not content: TalkBack skips it, and large text drops it so the two buttons stay in view
+        if (LocalDensity.current.fontScale <= 1.3f) Column(Modifier.clearAndSetSemantics {}) {
             LinesIn(sample)
             Station {
                 sample.forEach { bin ->
@@ -131,6 +136,8 @@ fun WelcomeScreen(vm: MainViewModel) {
             style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
+    // the shell runs behind the system navigation bar too, like the status bar above
+    Box(Modifier.fillMaxWidth().windowInsetsBottomHeight(WindowInsets.navigationBars).background(extra().shell))
     }
 }
 
@@ -167,8 +174,10 @@ fun WizardScreen(vm: MainViewModel) {
                     },
                 ) { Text(if (w.step < last) "Avanti" else "Salva e attiva") }
             }
+            Column {
             Surface(color = MaterialTheme.colorScheme.surfaceContainerLowest) {
-                val bar = Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 12.dp)
+                val bar = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
                 // with large text the buttons take the whole row: the step count goes on its own line above them
                 if (LocalDensity.current.fontScale > 1.3f) {
                     Column(bar) {
@@ -181,6 +190,8 @@ fun WizardScreen(vm: MainViewModel) {
                         buttons()
                     }
                 }
+            }
+            Box(Modifier.fillMaxWidth().windowInsetsBottomHeight(WindowInsets.navigationBars).background(extra().shell))
             }
         },
     ) {

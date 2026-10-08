@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,7 +57,7 @@ fun HolidaysScreen(vm: MainViewModel, state: UiState) {
     val end = today.plusDays(365)
     val holidays = remember(b) { b.holidayCalendar.between(today, end) }
     val byCollection = remember(b) { b.occurrences(today.minusDays(1), end.plusDays(1)).groupBy { it.collectionDate } }
-    var adding by remember { mutableStateOf(false) }
+    var adding by rememberSaveable { mutableStateOf(false) }
     val pid = b.profile.id
 
     Page(title = "Festività ed eccezioni", onBack = { vm.back() }) {
@@ -149,9 +150,10 @@ fun HolidaysScreen(vm: MainViewModel, state: UiState) {
     }
 
     if (adding) {
-        var name by remember { mutableStateOf("") }
-        var date by remember { mutableStateOf<LocalDate?>(null) }
-        var yearly by remember { mutableStateOf(true) }
+        // kept across a rotation or a theme change, like the other editors
+        var name by rememberSaveable { mutableStateOf("") }
+        var date by rememberSaveable { mutableStateOf<LocalDate?>(null) }
+        var yearly by rememberSaveable { mutableStateOf(true) }
         AlertDialog(
             onDismissRequest = { adding = false },
             title = { Text("Nuova festività") },

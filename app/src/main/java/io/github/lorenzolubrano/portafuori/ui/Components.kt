@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -20,6 +22,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryFull
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChildFriendly
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
@@ -36,6 +39,8 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -74,6 +79,7 @@ import androidx.compose.ui.unit.dp
 import io.github.lorenzolubrano.portafuori.data.Bin
 import io.github.lorenzolubrano.portafuori.rules.It
 import io.github.lorenzolubrano.portafuori.ui.theme.Contrast
+import io.github.lorenzolubrano.portafuori.ui.theme.extra
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -297,9 +303,53 @@ fun ChoiceChips(options: List<Pair<String, Boolean>>, onClick: (Int) -> Unit) {
     @OptIn(ExperimentalLayoutApi::class)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         options.forEachIndexed { i, (label, selected) ->
-            FilterChip(selected = selected, onClick = { onClick(i) }, label = { Text(label) })
+            // the chosen chip is filled and ticked like the weekday circles, so the choice is not a faint tint alone
+            FilterChip(
+                selected = selected,
+                onClick = { onClick(i) },
+                label = { Text(label) },
+                leadingIcon = if (selected) {
+                    { Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                } else null,
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                ),
+                border = FilterChipDefaults.filterChipBorder(enabled = true, selected = selected, borderColor = MaterialTheme.colorScheme.outline),
+                modifier = Modifier.heightIn(min = 48.dp),
+            )
         }
     }
+}
+
+/** Rows that belong together share one enamel surface, split by thin lines, instead of a stack of separate cards. */
+@Composable
+fun RowGroup(content: @Composable ColumnScope.() -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
+        Column(content = content)
+    }
+}
+
+/** A tappable row inside a [RowGroup]; TalkBack reads its texts together. */
+@Composable
+fun GroupRow(onClick: () -> Unit, content: @Composable RowScope.() -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 64.dp).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        content = content,
+    )
+}
+
+/** The line between two rows of a group, starting where the row's text starts. */
+@Composable
+fun GroupDivider(inset: Dp = 72.dp) {
+    HorizontalDivider(Modifier.padding(start = inset), color = extra().line)
 }
 
 @Composable

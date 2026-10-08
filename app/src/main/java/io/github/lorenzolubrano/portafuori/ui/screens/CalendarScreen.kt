@@ -42,6 +42,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -57,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
@@ -93,7 +95,9 @@ import io.github.lorenzolubrano.portafuori.ui.calendar.CalendarModel
 import io.github.lorenzolubrano.portafuori.ui.calendar.Night
 import io.github.lorenzolubrano.portafuori.ui.calendar.Stop
 import io.github.lorenzolubrano.portafuori.ui.theme.Contrast
+import io.github.lorenzolubrano.portafuori.ui.theme.Styles
 import io.github.lorenzolubrano.portafuori.ui.theme.extra
+import io.github.lorenzolubrano.portafuori.ui.theme.lightBarIcons
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -106,7 +110,7 @@ fun CalendarScreen(vm: MainViewModel, state: UiState) {
     var weekStart by rememberSaveable { mutableStateOf(CalendarModel.weekStart(today)) }
     var month by rememberSaveable { mutableStateOf(YearMonth.from(today)) }
     // the evening whose day sheet is open; every evening opens, even an empty one (extra collections)
-    var open by remember { mutableStateOf<LocalDate?>(null) }
+    var open by rememberSaveable { mutableStateOf<LocalDate?>(null) }
     val big = LocalDensity.current.fontScale > 1.3f
     val nights = remember(b, mode, weekStart, month) {
         if (mode == 0) {
@@ -331,7 +335,16 @@ fun DaySheet(vm: MainViewModel, b: ProfileBundle, date: LocalDate, holiday: Stri
     val collection = occ.firstOrNull()?.collectionDate ?: Schedule.collectionDate(b.rules, date)
     var moving by remember { mutableStateOf<Occurrence?>(null) }
     val pid = b.profile.id
-    ModalBottomSheet(onDismissRequest = onClose, sheetState = sheet) {
+    val appDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    ModalBottomSheet(
+        onDismissRequest = onClose,
+        sheetState = sheet,
+        // the sheet is a window of its own: its bar icons follow the app (shell above, sheet below), not the phone theme
+        properties = ModalBottomSheetProperties(
+            isAppearanceLightStatusBars = !lightBarIcons(Styles.current, appDark),
+            isAppearanceLightNavigationBars = !appDark,
+        ),
+    ) {
         Column(Modifier.padding(horizontal = 20.dp).navigationBarsPadding().padding(bottom = 16.dp).verticalScroll(rememberScrollState())) {
             Text(Wording.eveningTitle(b.eveningOf(collection)), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
             Text(Wording.ritiroLong(collection), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)

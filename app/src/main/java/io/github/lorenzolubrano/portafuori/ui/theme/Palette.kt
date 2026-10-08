@@ -48,7 +48,7 @@ object LineePalette {
         surfaceContainerLowest = 0xFFFFFFFF, surfaceContainerLow = 0xFFF0F3F8, surfaceContainer = 0xFFECEFF5,
         surfaceContainerHigh = 0xFFE3E8F2, surfaceContainerHighest = 0xFFD9E0EE,
         inverseSurface = 0xFF0E1A33, inverseOnSurface = 0xFFF3F5F9, inversePrimary = 0xFFF3F5F9,
-        outline = 0xFFC3CAD8, outlineVariant = 0xFFD5DBE6,
+        outline = 0xFF6E788F, outlineVariant = 0xFFD5DBE6,
     )
     val dark = SchemeColors(
         primary = 0xFFEEF2F9, onPrimary = 0xFF0B1630,
@@ -65,6 +65,6 @@ object LineePalette {
         surfaceContainerLowest = 0xFF12213F, surfaceContainerLow = 0xFF0F1C38, surfaceContainer = 0xFF132346,
         surfaceContainerHigh = 0xFF1A2B50, surfaceContainerHighest = 0xFF22355E,
         inverseSurface = 0xFF060E22, inverseOnSurface = 0xFFEEF2F9, inversePrimary = 0xFF060E22,
-        outline = 0xFF2C3C5E, outlineVariant = 0xFF233252,
+        outline = 0xFF7686A9, outlineVariant = 0xFF233252,
     )
 }
