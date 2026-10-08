@@ -346,6 +346,12 @@ fun GroupRow(onClick: () -> Unit, content: @Composable RowScope.() -> Unit) {
     )
 }
 
+/** A row of a [RowGroup] that is not tappable as a whole: it holds its own buttons. */
+@Composable
+fun GroupItem(content: @Composable ColumnScope.() -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), content = content)
+}
+
 /** The line between two rows of a group, starting where the row's text starts. */
 @Composable
 fun GroupDivider(inset: Dp = 72.dp) {

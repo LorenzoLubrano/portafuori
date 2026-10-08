@@ -30,18 +30,25 @@ data class Night(val evening: LocalDate, val occurrences: List<Occurrence>) {
 object CalendarModel {
     /** Roundels a month cell can hold before it shows "+N". */
     const val MAX_ROUNDELS = 4
+    /** The same at large text, where each roundel is drawn bigger. */
+    const val MAX_ROUNDELS_BIG = 2
 
     fun weekStart(d: LocalDate): LocalDate = d.minusDays(d.dayOfWeek.value - 1L)
 
-    /** How many bins a month cell hides behind "+N": with more than [MAX_ROUNDELS] it shows MAX_ROUNDELS - 1 roundels. */
-    fun overflow(count: Int): Int = if (count > MAX_ROUNDELS) count - (MAX_ROUNDELS - 1) else 0
+    /** How many bins a month cell hides behind "+N": with more than [max] places it shows max - 1 roundels. */
+    fun overflow(count: Int, max: Int = MAX_ROUNDELS): Int = if (count > max) count - (max - 1) else 0
+
+    /** The collection date whose bins go out on [evening] (the next day, or the same morning). */
+    private fun collectionOf(b: ProfileBundle, evening: LocalDate): LocalDate {
+        val next = evening.plusDays(1)
+        return if (b.eveningOf(next) == evening) next else evening
+    }
 
     /** The calendar date whose bins go out on [evening]: what the day sheet opens, even on an evening with nothing on it. */
-    fun calendarDateOf(b: ProfileBundle, evening: LocalDate): LocalDate {
-        val next = evening.plusDays(1)
-        val collection = if (b.eveningOf(next) == evening) next else evening
-        return Schedule.calendarDate(b.rules, collection)
-    }
+    fun calendarDateOf(b: ProfileBundle, evening: LocalDate): LocalDate = Schedule.calendarDate(b.rules, collectionOf(b, evening))
+
+    /** The public holiday on the collection that goes out on [evening], if any. */
+    fun holidayOf(b: ProfileBundle, evening: LocalDate): String? = b.holidayCalendar.nameOf(collectionOf(b, evening))
 
     /**
      * Nights whose evening falls in [from, to]. A collection goes out at most the evening before,

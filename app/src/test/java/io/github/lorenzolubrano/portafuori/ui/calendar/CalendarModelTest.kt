@@ -78,4 +78,21 @@ class CalendarModelTest {
         val exposeDay = ProfileEntity(id = 1, name = "Casa", calendarMode = CalendarMode.EXPOSE_DAY)
         assertEquals(fri9, CalendarModel.calendarDateOf(bundle(profile = exposeDay), fri9))
     }
+
+    /** A public holiday marks the evening its collection would go out: the evening before, or the morning itself. */
+    @Test fun holidayMarksTheEveningOfItsCollection() {
+        val oct31 = LocalDate.of(2026, 10, 31)
+        val nov1 = LocalDate.of(2026, 11, 1)
+        assertEquals("Ognissanti", CalendarModel.holidayOf(bundle(), oct31))
+        assertEquals(null, CalendarModel.holidayOf(bundle(), nov1))
+        val morning = ProfileEntity(id = 1, name = "Casa", exposureMode = ExposureMode.SAME_MORNING, exposeStart = LocalTime.of(5, 0), exposeEnd = LocalTime.of(8, 0))
+        assertEquals("Ognissanti", CalendarModel.holidayOf(bundle(profile = morning), nov1))
+    }
+
+    /** At large text a month cell has room for 2 places: 1 roundel + "+N", or 2 roundels. */
+    @Test fun largeTextCellHasTwoPlaces() {
+        assertEquals(0, CalendarModel.overflow(2, max = CalendarModel.MAX_ROUNDELS_BIG))
+        assertEquals(2, CalendarModel.overflow(3, max = CalendarModel.MAX_ROUNDELS_BIG))
+        assertEquals(6, CalendarModel.overflow(7, max = CalendarModel.MAX_ROUNDELS_BIG))
+    }
 }

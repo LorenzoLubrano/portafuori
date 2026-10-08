@@ -67,6 +67,7 @@ import io.github.lorenzolubrano.portafuori.ui.RowGroup
 import io.github.lorenzolubrano.portafuori.ui.Screen
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
 import io.github.lorenzolubrano.portafuori.ui.SegmentedChoice
+import io.github.lorenzolubrano.portafuori.ui.ShellAction
 import io.github.lorenzolubrano.portafuori.ui.SwitchRow
 import io.github.lorenzolubrano.portafuori.ui.TimeField
 import io.github.lorenzolubrano.portafuori.ui.UiState
@@ -150,7 +151,7 @@ fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
     Page(
         title = "Impostazioni",
         onBack = { leave(save = true) },
-        actions = { TextButton(onClick = { leave(save = true) }, enabled = dirty) { Text("Salva") } },
+        actions = { ShellAction("Salva", enabled = dirty) { leave(save = true) } },
     ) {
         item {
             OutlinedTextField(p.name, { set(p.copy(name = it.take(Limits.PROFILE_NAME))) }, label = { Text("Nome") }, singleLine = true, modifier = Modifier.fillMaxWidth())

@@ -69,7 +69,10 @@ class TonightWidget : AppWidgetProvider() {
             )
             v.setOnClickPendingIntent(R.id.widget_root, open)
             v.setViewVisibility(R.id.widget_done, View.GONE)
+            v.setViewVisibility(R.id.widget_done_state, View.GONE)
             v.setViewVisibility(R.id.widget_roundels, View.GONE)
+            // without roundels the secondary line has room in the one-row layout too
+            v.setViewVisibility(R.id.widget_sub, View.VISIBLE)
             if (bundle == null || bundle.bins.isEmpty()) {
                 v.setTextViewText(R.id.widget_title, "${Brand.NAME}")
                 v.setTextViewText(R.id.widget_bins, "Configura il calendario")
@@ -90,7 +93,10 @@ class TonightWidget : AppWidgetProvider() {
                     v.setContentDescription(R.id.widget_roundels, e.binNames)
                     v.setViewVisibility(R.id.widget_roundels, View.VISIBLE)
                     v.setTextViewText(R.id.widget_bins, names(e))
-                    v.setTextViewText(R.id.widget_sub, if (e.done) "✓ Esposti" else Planner.windowText(e))
+                    v.setTextViewText(R.id.widget_sub, Planner.windowText(e))
+                    if (compact) v.setViewVisibility(R.id.widget_sub, View.GONE)
+                    // done: a check and «Esposti» take the button's place, in both layouts
+                    if (e.done) v.setViewVisibility(R.id.widget_done_state, View.VISIBLE)
                     if (!e.done) {
                         v.setViewVisibility(R.id.widget_done, View.VISIBLE)
                         val i = Intent(context, ActionReceiver::class.java).apply {

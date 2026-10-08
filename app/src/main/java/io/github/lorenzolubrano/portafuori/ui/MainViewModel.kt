@@ -138,7 +138,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val current: Screen get() = stack.lastOrNull() ?: tab
 
     fun open(s: Screen) { stack.add(s) }
-    fun switchTab(s: Screen) { stack.clear(); tab = s }
+    fun switchTab(s: Screen) { clearStack(); tab = s }
     fun back(): Boolean = if (stack.isNotEmpty()) { stack.removeAt(stack.lastIndex); true } else if (tab != Screen.Today) { tab = Screen.Today; true } else false
 
     var message by mutableStateOf<String?>(null)
@@ -158,7 +158,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteProfile(id: Long) = launch {
         repo.deleteProfile(id)
         state.value.bundles.firstOrNull { it.profile.id != id }?.let { settingsStore.setSelectedProfile(it.profile.id) }
-        stack.clear()
+        clearStack()
     }
     fun setTheme(mode: ThemeMode) = launch { settingsStore.setTheme(mode) }
 
@@ -168,18 +168,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /** House settings draft, for the same reason. */
     var profileDraft by mutableStateOf<ProfileEntity?>(null)
 
+    /** Drops every open screen and, with them, their unsaved drafts: an abandoned edit never comes back on its own. */
+    private fun clearStack() {
+        stack.clear()
+        binDraft = null
+        profileDraft = null
+    }
+
     // --- wizard ---
     var wizard by mutableStateOf(WizardDraft())
     fun startWizard(first: Boolean) {
         wizard = WizardDraft(name = if (state.value.bundles.isEmpty()) "Casa" else "Seconda casa")
-        if (first) stack.clear()
+        if (first) clearStack()
         open(Screen.Wizard(first))
     }
     fun saveWizard(onSaved: () -> Unit) = launch {
         val w = wizard
         val id = repo.createProfile(w.profile(), w.binsWithRules())
         settingsStore.setSelectedProfile(id)
-        stack.clear()
+        clearStack()
         tab = Screen.Today
         onSaved()
     }
@@ -317,7 +324,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 lastId?.let { settingsStore.setSelectedProfile(it) }
                 pendingImport = null
                 pendingRestore = false
-                stack.clear()
+                clearStack()
                 tab = Screen.Today
                 message = if (restore) "Backup ripristinato." else "Calendario importato. Controlla i giorni e gli orari."
             } catch (e: CancellationException) {

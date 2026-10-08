@@ -21,13 +21,18 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -81,12 +86,13 @@ import io.github.lorenzolubrano.portafuori.rules.ROME
 import io.github.lorenzolubrano.portafuori.rules.Schedule
 import io.github.lorenzolubrano.portafuori.rules.Status
 import io.github.lorenzolubrano.portafuori.ui.BinBadge
-import io.github.lorenzolubrano.portafuori.ui.Card
 import io.github.lorenzolubrano.portafuori.ui.DatePickDialog
+import io.github.lorenzolubrano.portafuori.ui.GroupDivider
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
 import io.github.lorenzolubrano.portafuori.ui.ProfileSwitcher
 import io.github.lorenzolubrano.portafuori.ui.Roundel
+import io.github.lorenzolubrano.portafuori.ui.RowGroup
 import io.github.lorenzolubrano.portafuori.ui.SegmentedChoice
 import io.github.lorenzolubrano.portafuori.ui.UiState
 import io.github.lorenzolubrano.portafuori.ui.Wording
@@ -143,7 +149,7 @@ fun CalendarScreen(vm: MainViewModel, state: UiState) {
                         AnimatedContent(month, transitionSpec = { slideByTime() }, label = "mese") { ym ->
                             val gridStart = CalendarModel.weekStart(ym.atDay(1))
                             val n = remember(b, ym) { CalendarModel.nights(b, gridStart, gridStart.plusDays(41)) }
-                            MonthGrid(b, ym, gridStart, today, n) { open = it }
+                            MonthGrid(b, ym, gridStart, today, n, big) { open = it }
                         }
                     }
                 }
@@ -183,6 +189,9 @@ private fun edgeFor(color: Long): Color? {
     return if (Contrast.needsEdge(color, surface)) MaterialTheme.colorScheme.onSurfaceVariant else null
 }
 
+/** The old month view's TalkBack wording for a holiday: «, festivo: Ognissanti». */
+private fun String?.festivo(): String = if (this == null) "" else ", festivo: $this"
+
 @Composable
 private fun WeekLines(b: ProfileBundle, start: LocalDate, today: LocalDate, nights: Map<LocalDate, Night>, big: Boolean, onOpen: (LocalDate) -> Unit) {
     val days = (0..6).map { start.plusDays(it.toLong()) }
@@ -194,15 +203,20 @@ private fun WeekLines(b: ProfileBundle, start: LocalDate, today: LocalDate, nigh
                 if (!big) Spacer(Modifier.weight(1f))
                 days.forEach { d ->
                     val tonight = d == today
+                    val holiday = CalendarModel.holidayOf(b, d)
                     Column(
                         Modifier.then(if (big) Modifier.weight(1f) else Modifier.width(colW + 4.dp)).heightIn(min = 48.dp)
                             .clip(MaterialTheme.shapes.small)
                             .background(if (tonight) MaterialTheme.colorScheme.primary else Color.Transparent)
                             .clickable { onOpen(d) }
-                            .semantics { contentDescription = Wording.eveningTitle(d) },
+                            .semantics { contentDescription = Wording.eveningTitle(d) + holiday.festivo() },
                         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
                     ) {
-                        val ink = if (tonight) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        val ink = when {
+                            tonight -> MaterialTheme.colorScheme.onPrimary
+                            holiday != null -> MaterialTheme.colorScheme.tertiary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                         Text(It.dayName(d.dayOfWeek).take(1).uppercase(), style = MaterialTheme.typography.labelMedium, color = ink)
                         Text("${d.dayOfMonth}", style = MaterialTheme.typography.labelLarge, color = ink)
                     }
@@ -275,7 +289,10 @@ private fun BinLine(bin: Bin, stops: List<Stop>, big: Boolean, colW: Dp) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun MonthGrid(b: ProfileBundle, month: YearMonth, gridStart: LocalDate, today: LocalDate, nights: Map<LocalDate, Night>, onOpen: (LocalDate) -> Unit) {
+private fun MonthGrid(b: ProfileBundle, month: YearMonth, gridStart: LocalDate, today: LocalDate, nights: Map<LocalDate, Night>, big: Boolean, onOpen: (LocalDate) -> Unit) {
+    // at large text the roundels grow so their icons stay readable, and a cell keeps fewer of them
+    val places = if (big) CalendarModel.MAX_ROUNDELS_BIG else CalendarModel.MAX_ROUNDELS
+    val roundel = if (big) 24.dp else 16.dp
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth()) {
             DayOfWeek.entries.forEach {
@@ -292,24 +309,31 @@ private fun MonthGrid(b: ProfileBundle, month: YearMonth, gridStart: LocalDate, 
                     val night = nights[d]
                     val inMonth = d.month == month.month
                     val active = night?.activeBinIds.orEmpty().mapNotNull { b.bin(it) }
-                    val shown = if (active.size > CalendarModel.MAX_ROUNDELS) active.take(CalendarModel.MAX_ROUNDELS - 1) else active
+                    val shown = if (active.size > places) active.take(places - 1) else active
+                    val holiday = CalendarModel.holidayOf(b, d)
                     Column(
                         Modifier.weight(1f).heightIn(min = 64.dp).clip(MaterialTheme.shapes.small)
                             .background(if (night != null && inMonth) MaterialTheme.colorScheme.surfaceContainerLowest else Color.Transparent)
                             .then(if (d == today) Modifier.border(3.dp, extra().stationFrame, MaterialTheme.shapes.small) else Modifier)
                             .clickable { onOpen(d) }
-                            .semantics { contentDescription = Wording.eveningTitle(d) + if (active.isEmpty()) "" else ": " + active.joinToString { it.name } }
+                            .semantics {
+                                contentDescription = Wording.eveningTitle(d) + holiday.festivo() + if (active.isEmpty()) "" else ": " + active.joinToString { it.name }
+                            }
                             .padding(4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
                             "${d.dayOfMonth}", style = MaterialTheme.typography.labelLarge,
                             fontWeight = if (inMonth) FontWeight.Bold else FontWeight.Normal,
-                            color = if (inMonth) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = when {
+                                holiday != null -> MaterialTheme.colorScheme.tertiary
+                                inMonth -> MaterialTheme.colorScheme.onSurface
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            },
                         )
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            shown.forEach { BinBadge(it.entity.colorArgb, it.entity.iconKey, 16.dp) }
-                            val more = CalendarModel.overflow(active.size)
+                            shown.forEach { BinBadge(it.entity.colorArgb, it.entity.iconKey, roundel) }
+                            val more = CalendarModel.overflow(active.size, places)
                             if (more > 0) Text("+$more", style = MaterialTheme.typography.labelSmall)
                         }
                         if (night != null && active.isEmpty()) {
@@ -342,10 +366,12 @@ fun DaySheet(vm: MainViewModel, b: ProfileBundle, date: LocalDate, holiday: Stri
         // the sheet is a window of its own: its bar icons follow the app (shell above, sheet below), not the phone theme
         properties = ModalBottomSheetProperties(
             isAppearanceLightStatusBars = !lightBarIcons(Styles.current, appDark),
-            isAppearanceLightNavigationBars = !appDark,
+            isAppearanceLightNavigationBars = !lightBarIcons(Styles.current, appDark),
         ),
+        // the bottom inset is drawn below as the shell, like every other screen
+        contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal) },
     ) {
-        Column(Modifier.padding(horizontal = 20.dp).navigationBarsPadding().padding(bottom = 16.dp).verticalScroll(rememberScrollState())) {
+        Column(Modifier.weight(1f, fill = false).padding(horizontal = 20.dp).padding(bottom = 16.dp).verticalScroll(rememberScrollState())) {
             Text(Wording.eveningTitle(b.eveningOf(collection)), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
             Text(Wording.ritiroLong(collection), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             holiday?.let { Text("Festivo: $it", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
@@ -355,43 +381,46 @@ fun DaySheet(vm: MainViewModel, b: ProfileBundle, date: LocalDate, holiday: Stri
             }
             Spacer(Modifier.height(12.dp))
             if (occ.isEmpty()) Text("Nessun ritiro in questo giorno.", style = MaterialTheme.typography.bodyLarge)
-            occ.forEach { o ->
-                val bin = b.bin(o.binId) ?: return@forEach
-                Card {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Roundel(bin, 32.dp, ring = false)
-                        Spacer(Modifier.width(10.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                bin.name, style = MaterialTheme.typography.titleMedium,
-                                textDecoration = if (o.isActive) TextDecoration.None else TextDecoration.LineThrough,
-                            )
-                            Text(statusText(o, bin.rules), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            val rows = occ.mapNotNull { o -> b.bin(o.binId)?.let { o to it } }
+            if (rows.isNotEmpty()) RowGroup {
+                rows.forEachIndexed { i, (o, bin) ->
+                    if (i > 0) GroupDivider(58.dp)
+                    Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Roundel(bin, 32.dp, ring = false)
+                            Spacer(Modifier.width(10.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    bin.name, style = MaterialTheme.typography.titleMedium,
+                                    textDecoration = if (o.isActive) TextDecoration.None else TextDecoration.LineThrough,
+                                )
+                                Text(statusText(o, bin.rules), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                         }
-                    }
-                    val tall = Modifier.heightIn(min = 48.dp)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        when (o.status) {
-                            Status.HOLIDAY_PENDING -> {
-                                TextButton(onClick = { vm.holidayDecision(pid, listOf(o), keep = true) }, modifier = tall) { Text("Si fa") }
-                                TextButton(onClick = { vm.holidayDecision(pid, listOf(o), keep = false) }, modifier = tall) { Text("Salta") }
-                                TextButton(onClick = { moving = o }, modifier = tall) { Text("Sposta") }
-                            }
-                            Status.ACTIVE -> {
-                                if (o.origin == Origin.RULE) {
-                                    TextButton(onClick = { vm.skip(o, pid); vm.message = "Ritiro saltato." }, modifier = tall) { Text("Salta") }
-                                } else {
-                                    TextButton(onClick = { vm.restore(o) }, modifier = tall) { Text(if (o.origin == Origin.ADDED) "Rimuovi" else "Annulla spostamento") }
+                        val tall = Modifier.heightIn(min = 48.dp)
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            when (o.status) {
+                                Status.HOLIDAY_PENDING -> {
+                                    TextButton(onClick = { vm.holidayDecision(pid, listOf(o), keep = true) }, modifier = tall) { Text("Si fa") }
+                                    TextButton(onClick = { vm.holidayDecision(pid, listOf(o), keep = false) }, modifier = tall) { Text("Salta") }
+                                    TextButton(onClick = { moving = o }, modifier = tall) { Text("Sposta") }
                                 }
-                                TextButton(onClick = { moving = o }, modifier = tall) { Text("Sposta") }
+                                Status.ACTIVE -> {
+                                    if (o.origin == Origin.RULE) {
+                                        TextButton(onClick = { vm.skip(o, pid); vm.message = "Ritiro saltato." }, modifier = tall) { Text("Salta") }
+                                    } else {
+                                        TextButton(onClick = { vm.restore(o) }, modifier = tall) { Text(if (o.origin == Origin.ADDED) "Rimuovi" else "Annulla spostamento") }
+                                    }
+                                    TextButton(onClick = { moving = o }, modifier = tall) { Text("Sposta") }
+                                }
+                                Status.SKIPPED, Status.MOVED_OUT -> TextButton(onClick = { vm.restore(o) }, modifier = tall) { Text("Ripristina") }
+                                Status.HOLIDAY_SKIPPED -> TextButton(onClick = { vm.holidayDecision(pid, listOf(o), keep = true) }, modifier = tall) { Text("Si fa lo stesso") }
                             }
-                            Status.SKIPPED, Status.MOVED_OUT -> TextButton(onClick = { vm.restore(o) }, modifier = tall) { Text("Ripristina") }
-                            Status.HOLIDAY_SKIPPED -> TextButton(onClick = { vm.holidayDecision(pid, listOf(o), keep = true) }, modifier = tall) { Text("Si fa lo stesso") }
                         }
                     }
                 }
-                Spacer(Modifier.height(8.dp))
             }
+            Spacer(Modifier.height(8.dp))
             val activeIds = occ.filter { it.isActive }.map { it.binId }.toSet()
             val others = b.bins.filter { it.id !in activeIds }
             if (others.isNotEmpty()) {
@@ -409,6 +438,7 @@ fun DaySheet(vm: MainViewModel, b: ProfileBundle, date: LocalDate, holiday: Stri
                 }
             }
         }
+        Box(Modifier.fillMaxWidth().windowInsetsBottomHeight(WindowInsets.navigationBars).background(extra().shell))
     }
     moving?.let { o ->
         DatePickDialog(o.calendarDate, { moving = null }) { to -> if (to != o.calendarDate) vm.move(o, pid, to) }

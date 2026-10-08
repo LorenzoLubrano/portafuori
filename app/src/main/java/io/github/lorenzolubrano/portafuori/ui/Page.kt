@@ -21,12 +21,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -34,6 +36,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.lorenzolubrano.portafuori.ui.theme.extra
+
+/** A text action on the shell (top bar): the shell's ink, faded when disabled. Plain TextButtons would take primary, the shell itself in light Linee. */
+@Composable
+fun ShellAction(text: String, enabled: Boolean = true, onClick: () -> Unit) {
+    val on = extra().onShell
+    TextButton(
+        onClick = onClick,
+        enabled = enabled,
+        colors = ButtonDefaults.textButtonColors(contentColor = on, disabledContentColor = on.copy(alpha = 0.38f)),
+    ) { Text(text) }
+}
 
 /** Top bar + scrolling column shared by every screen. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,12 +69,7 @@ fun Page(
                         IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro") }
                     }
                 },
-                // text buttons take their ink from primary, which in light Linee is the shell itself: give them the shell's ink
-                actions = {
-                    val row = this
-                    val on = extra().onShell
-                    MaterialTheme(colorScheme = MaterialTheme.colorScheme.copy(primary = on, onSurface = on)) { row.actions() }
-                },
+                actions = actions,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = extra().shell,
                     titleContentColor = extra().onShell,

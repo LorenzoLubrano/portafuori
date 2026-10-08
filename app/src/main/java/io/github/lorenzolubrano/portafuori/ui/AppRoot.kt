@@ -5,15 +5,22 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsEndWidth
+import androidx.compose.foundation.layout.windowInsetsStartWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Recycling
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.sp
 import io.github.lorenzolubrano.portafuori.ui.theme.extra
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -119,6 +126,9 @@ fun AppRoot(vm: MainViewModel) {
                     Screen.Info -> InfoScreen(vm)
                 }
             }
+            // in landscape the system navigation bar sits at a side: the shell runs behind it, as at the bottom
+            Box(Modifier.align(Alignment.CenterStart).fillMaxHeight().windowInsetsStartWidth(WindowInsets.navigationBars).background(extra().shell))
+            Box(Modifier.align(Alignment.CenterEnd).fillMaxHeight().windowInsetsEndWidth(WindowInsets.navigationBars).background(extra().shell))
         }
     }
 }

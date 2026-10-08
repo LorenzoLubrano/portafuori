@@ -1,5 +1,6 @@
 package io.github.lorenzolubrano.portafuori.ui.screens
 
+import androidx.compose.runtime.key
 import io.github.lorenzolubrano.portafuori.Brand
 import android.Manifest
 import android.content.Intent
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ErrorOutline
@@ -41,10 +41,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.lorenzolubrano.portafuori.reminders.Reliability
 import io.github.lorenzolubrano.portafuori.rules.ROME
 import io.github.lorenzolubrano.portafuori.ui.Card
+import io.github.lorenzolubrano.portafuori.ui.GroupDivider
+import io.github.lorenzolubrano.portafuori.ui.GroupItem
+import io.github.lorenzolubrano.portafuori.ui.GroupRow
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
 import io.github.lorenzolubrano.portafuori.ui.Route
 import io.github.lorenzolubrano.portafuori.ui.RouteStop
+import io.github.lorenzolubrano.portafuori.ui.RowGroup
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
 import io.github.lorenzolubrano.portafuori.ui.theme.okColor
 import java.time.Instant
@@ -128,15 +132,21 @@ fun ReliabilityScreen(vm: MainViewModel) {
             }
         }
         item { SectionTitle("Controlli") }
+        // the checks are one group of rows, like the other lists
         item {
-            CheckRow("Notifiche consentite", rel.notifications) {
-                if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS) else go(Reliability.notificationSettings(context))
+            RowGroup {
+                CheckRow("Notifiche consentite", rel.notifications) {
+                    if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS) else go(Reliability.notificationSettings(context))
+                }
+                GroupDivider(52.dp)
+                CheckRow("Avvisi all'ora esatta", rel.exactAlarms) { go(Reliability.exactAlarmSettings(context)) }
+                GroupDivider(52.dp)
+                CheckRow("Batteria senza restrizioni", rel.battery) { go(Reliability.batteryExemption(context)) }
+                rel.hibernationExempt?.let { ok ->
+                    GroupDivider(52.dp)
+                    CheckRow("«Sospendi attività se inutilizzata» disattivato", ok) { go(Reliability.hibernationSettings(context)) }
+                }
             }
-        }
-        item { CheckRow("Avvisi all'ora esatta", rel.exactAlarms) { go(Reliability.exactAlarmSettings(context)) } }
-        item { CheckRow("Batteria senza restrizioni", rel.battery) { go(Reliability.batteryExemption(context)) } }
-        rel.hibernationExempt?.let { ok ->
-            item { CheckRow("«Sospendi attività se inutilizzata» disattivato", ok) { go(Reliability.hibernationSettings(context)) } }
         }
         item { SectionTitle("Prova") }
         item {
@@ -151,17 +161,23 @@ fun ReliabilityScreen(vm: MainViewModel) {
             )
         }
         item { SectionTitle("Guida per il tuo telefono") }
-        items(GUIDES, key = { it.brand }) { g ->
-            val open = expanded == g.brand
-            Card(onClick = { expanded = if (open) "" else g.brand }) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(g.brand + if (g == mine) " (il tuo)" else "", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                    Icon(if (open) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null)
-                }
-                if (open) {
-                    Spacer(Modifier.height(8.dp))
-                    g.steps.forEachIndexed { i, s -> Text("${i + 1}. $s", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 2.dp)) }
-                    TextButton(onClick = { go(Reliability.appDetails(context)) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Apri le impostazioni di ${Brand.NAME}") }
+        item {
+            RowGroup {
+                GUIDES.forEachIndexed { n, g ->
+                    key(g.brand) {
+                        if (n > 0) GroupDivider(16.dp)
+                        val open = expanded == g.brand
+                        GroupRow(onClick = { expanded = if (open) "" else g.brand }) {
+                            Text(g.brand + if (g == mine) " (il tuo)" else "", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            Icon(if (open) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null)
+                        }
+                        if (open) {
+                            Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+                                g.steps.forEachIndexed { i, s -> Text("${i + 1}. $s", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 2.dp)) }
+                                TextButton(onClick = { go(Reliability.appDetails(context)) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Apri le impostazioni di ${Brand.NAME}") }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -202,7 +218,7 @@ fun ReliabilityScreen(vm: MainViewModel) {
 
 @Composable
 private fun CheckRow(label: String, ok: Boolean, onFix: () -> Unit) {
-    Card {
+    GroupItem {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 if (ok) Icons.Filled.CheckCircle else Icons.Filled.ErrorOutline, contentDescription = if (ok) "OK" else "Da sistemare",

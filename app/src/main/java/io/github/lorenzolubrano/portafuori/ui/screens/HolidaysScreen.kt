@@ -1,5 +1,7 @@
 package io.github.lorenzolubrano.portafuori.ui.screens
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.key
 import io.github.lorenzolubrano.portafuori.data.Limits
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -39,11 +40,13 @@ import io.github.lorenzolubrano.portafuori.rules.It
 import io.github.lorenzolubrano.portafuori.rules.ROME
 import io.github.lorenzolubrano.portafuori.rules.Status
 import io.github.lorenzolubrano.portafuori.ui.BinBadge
-import io.github.lorenzolubrano.portafuori.ui.Card
 import io.github.lorenzolubrano.portafuori.ui.ChoiceChips
 import io.github.lorenzolubrano.portafuori.ui.DateField
+import io.github.lorenzolubrano.portafuori.ui.GroupDivider
+import io.github.lorenzolubrano.portafuori.ui.GroupItem
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
+import io.github.lorenzolubrano.portafuori.ui.RowGroup
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
 import io.github.lorenzolubrano.portafuori.ui.SwitchRow
 import io.github.lorenzolubrano.portafuori.ui.UiState
@@ -71,50 +74,63 @@ fun HolidaysScreen(vm: MainViewModel, state: UiState) {
             )
         }
         item { SectionTitle("Festivi dei prossimi 12 mesi") }
-        items(holidays, key = { it.first.toString() }) { (date, name) ->
-            val occ = byCollection[date].orEmpty()
-            val pending = occ.filter { it.status == Status.HOLIDAY_PENDING }
-            Card {
-                Text("${It.weekdayDay(date).replaceFirstChar { it.uppercase() }} · $name", style = MaterialTheme.typography.titleSmall)
-                if (occ.isEmpty()) {
-                    Text("Nessun ritiro", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                occ.forEach { o ->
-                    val bin = b.bin(o.binId) ?: return@forEach
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                        BinBadge(bin.entity.colorArgb, bin.entity.iconKey, 24.dp)
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            bin.name + ": " + when (o.status) {
-                                Status.HOLIDAY_PENDING -> "da decidere"
-                                Status.ACTIVE -> "si fa"
-                                Status.SKIPPED, Status.HOLIDAY_SKIPPED -> "salta"
-                                Status.MOVED_OUT -> "spostato al ${o.movedTo?.let { It.dayMonth(it) }}"
-                            },
-                            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
-                if (pending.isNotEmpty()) {
-                    Row {
-                        TextButton(onClick = { vm.holidayDecision(pid, pending, keep = true) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Si fa") }
-                        TextButton(onClick = { vm.holidayDecision(pid, pending, keep = false) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Salta") }
+        // the holidays, the local holidays and the day edits are each one group of rows, not a stack of cards
+        if (holidays.isNotEmpty()) item {
+            RowGroup {
+                holidays.forEachIndexed { i, (date, name) ->
+                    key(date) {
+                        if (i > 0) GroupDivider(16.dp)
+                        val occ = byCollection[date].orEmpty()
+                        val pending = occ.filter { it.status == Status.HOLIDAY_PENDING }
+                        GroupItem {
+                            Text("${It.weekdayDay(date).replaceFirstChar { it.uppercase() }} · $name", style = MaterialTheme.typography.titleSmall)
+                            if (occ.isEmpty()) {
+                                Text("Nessun ritiro", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            occ.forEach { o ->
+                                val bin = b.bin(o.binId) ?: return@forEach
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                                    BinBadge(bin.entity.colorArgb, bin.entity.iconKey, 24.dp)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        bin.name + ": " + when (o.status) {
+                                            Status.HOLIDAY_PENDING -> "da decidere"
+                                            Status.ACTIVE -> "si fa"
+                                            Status.SKIPPED, Status.HOLIDAY_SKIPPED -> "salta"
+                                            Status.MOVED_OUT -> "spostato al ${o.movedTo?.let { It.dayMonth(it) }}"
+                                        },
+                                        style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f),
+                                    )
+                                }
+                            }
+                            if (pending.isNotEmpty()) {
+                                Row {
+                                    TextButton(onClick = { vm.holidayDecision(pid, pending, keep = true) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Si fa") }
+                                    TextButton(onClick = { vm.holidayDecision(pid, pending, keep = false) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Salta") }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
         item { SectionTitle("Festività locali") }
-        items(b.holidays, key = { it.id }) { h ->
-            Card {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(h.name, style = MaterialTheme.typography.titleSmall)
-                        Text(
-                            decodeMonthDay(h.monthDay)?.let { "Ogni anno il ${It.monthDay(it)}" } ?: h.date?.let { "Solo il ${It.full(it)}" }.orEmpty(),
-                            style = MaterialTheme.typography.bodySmall,
-                        )
+        if (b.holidays.isNotEmpty()) item {
+            RowGroup {
+                b.holidays.forEachIndexed { i, h ->
+                    key(h.id) {
+                        if (i > 0) GroupDivider(16.dp)
+                        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
+                                Text(h.name, style = MaterialTheme.typography.titleSmall)
+                                Text(
+                                    decodeMonthDay(h.monthDay)?.let { "Ogni anno il ${It.monthDay(it)}" } ?: h.date?.let { "Solo il ${It.full(it)}" }.orEmpty(),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                            IconButton(onClick = { vm.deleteHoliday(h.id) }) { Icon(Icons.Filled.Close, "Elimina festività") }
+                        }
                     }
-                    IconButton(onClick = { vm.deleteHoliday(h.id) }) { Icon(Icons.Filled.Close, "Elimina festività") }
                 }
             }
         }
@@ -128,22 +144,27 @@ fun HolidaysScreen(vm: MainViewModel, state: UiState) {
         val edits = b.exceptions.filter { maxOf(it.date, it.target ?: it.date) >= today }
         item { SectionTitle("Modifiche ai singoli giorni") }
         if (edits.isEmpty()) item { Text("Nessuna modifica.", style = MaterialTheme.typography.bodyMedium) }
-        items(edits, key = { it.id }) { e ->
-            val bin = b.bin(e.binId)
-            Card {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    bin?.let { BinBadge(it.entity.colorArgb, it.entity.iconKey, 26.dp) }
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        (bin?.name ?: "") + ": " + when (e.kind) {
-                            ExceptionKind.SKIP -> "salta il ${It.weekdayDay(e.date)}"
-                            ExceptionKind.MOVE -> "dal ${It.weekdayDay(e.date)} al ${e.target?.let { It.weekdayDay(it) }}"
-                            ExceptionKind.ADD -> "in più il ${It.weekdayDay(e.date)}"
-                            ExceptionKind.KEEP -> "si fa il ${It.weekdayDay(e.date)} (festivo)"
-                        },
-                        style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f),
-                    )
-                    IconButton(onClick = { vm.restoreException(e) }) { Icon(Icons.Filled.Close, "Annulla modifica") }
+        if (edits.isNotEmpty()) item {
+            RowGroup {
+                edits.forEachIndexed { i, e ->
+                    key(e.id) {
+                        if (i > 0) GroupDivider(52.dp)
+                        val bin = b.bin(e.binId)
+                        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            bin?.let { BinBadge(it.entity.colorArgb, it.entity.iconKey, 26.dp) }
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                (bin?.name ?: "") + ": " + when (e.kind) {
+                                    ExceptionKind.SKIP -> "salta il ${It.weekdayDay(e.date)}"
+                                    ExceptionKind.MOVE -> "dal ${It.weekdayDay(e.date)} al ${e.target?.let { It.weekdayDay(it) }}"
+                                    ExceptionKind.ADD -> "in più il ${It.weekdayDay(e.date)}"
+                                    ExceptionKind.KEEP -> "si fa il ${It.weekdayDay(e.date)} (festivo)"
+                                },
+                                style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f).padding(vertical = 8.dp),
+                            )
+                            IconButton(onClick = { vm.restoreException(e) }) { Icon(Icons.Filled.Close, "Annulla modifica") }
+                        }
+                    }
                 }
             }
         }

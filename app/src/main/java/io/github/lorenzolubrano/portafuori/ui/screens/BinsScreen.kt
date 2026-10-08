@@ -80,6 +80,7 @@ import io.github.lorenzolubrano.portafuori.ui.Roundel
 import io.github.lorenzolubrano.portafuori.ui.RowGroup
 import io.github.lorenzolubrano.portafuori.ui.Screen
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
+import io.github.lorenzolubrano.portafuori.ui.ShellAction
 import io.github.lorenzolubrano.portafuori.ui.SwitchRow
 import io.github.lorenzolubrano.portafuori.ui.UiState
 import io.github.lorenzolubrano.portafuori.ui.WeekdayChips
@@ -195,7 +196,7 @@ fun BinEditorScreen(vm: MainViewModel, state: UiState, binId: Long?) {
         onBack = ::leave,
         actions = {
             if (existing != null) IconButton(onClick = { confirmDelete = true }) { Icon(Icons.Filled.Delete, "Elimina bidone") }
-            TextButton(onClick = ::save) { Text("Salva") }
+            ShellAction("Salva", onClick = ::save)
         },
     ) {
         item {
@@ -368,7 +369,7 @@ fun RuleEditorDialog(initial: Rule?, onDismiss: () -> Unit, onSave: (Rule) -> Un
             Page(
                 title = if (initial == null) "Nuova regola" else "Modifica regola",
                 onBack = onDismiss,
-                actions = { TextButton(onClick = { build()?.let(onSave) }, enabled = build() != null) { Text("OK") } },
+                actions = { ShellAction("OK", enabled = build() != null) { build()?.let(onSave) } },
             ) {
                 item {
                     val types = listOf(RuleType.WEEKLY to "Ogni settimana", RuleType.EVERY_N_WEEKS to "Ogni N settimane", RuleType.MONTHLY_NTH to "1°, 2°… del mese", RuleType.FIXED_DATES to "Date fisse")
