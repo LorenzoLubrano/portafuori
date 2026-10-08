@@ -8,9 +8,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
@@ -40,6 +43,8 @@ import io.github.lorenzolubrano.portafuori.rules.ROME
 import io.github.lorenzolubrano.portafuori.ui.Card
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
+import io.github.lorenzolubrano.portafuori.ui.Route
+import io.github.lorenzolubrano.portafuori.ui.RouteStop
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
 import io.github.lorenzolubrano.portafuori.ui.theme.okColor
 import java.time.Instant
@@ -89,6 +94,7 @@ private val GUIDES = listOf(
     ),
 )
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ReliabilityScreen(vm: MainViewModel) {
     val context = LocalContext.current
@@ -127,17 +133,18 @@ fun ReliabilityScreen(vm: MainViewModel) {
                 if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS) else go(Reliability.notificationSettings(context))
             }
         }
-        item { CheckRow("Sveglie esatte", rel.exactAlarms) { go(Reliability.exactAlarmSettings(context)) } }
+        item { CheckRow("Avvisi all'ora esatta", rel.exactAlarms) { go(Reliability.exactAlarmSettings(context)) } }
         item { CheckRow("Batteria senza restrizioni", rel.battery) { go(Reliability.batteryExemption(context)) } }
         rel.hibernationExempt?.let { ok ->
             item { CheckRow("«Sospendi attività se inutilizzata» disattivato", ok) { go(Reliability.hibernationSettings(context)) } }
         }
         item { SectionTitle("Prova") }
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { vm.testNow() }) { Text("Notifica di prova") }
-                OutlinedButton(onClick = { vm.testInOneMinute() }) { Text("Prova tra 1 minuto") }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { vm.testNow() }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Notifica di prova") }
+                OutlinedButton(onClick = { vm.testInOneMinute() }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Prova tra 1 minuto") }
             }
+            Spacer(Modifier.height(6.dp))
             Text(
                 "Per la prova tra 1 minuto, blocca lo schermo e aspetta: se la notifica arriva, anche gli avvisi della sera arriveranno.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -154,7 +161,7 @@ fun ReliabilityScreen(vm: MainViewModel) {
                 if (open) {
                     Spacer(Modifier.height(8.dp))
                     g.steps.forEachIndexed { i, s -> Text("${i + 1}. $s", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 2.dp)) }
-                    TextButton(onClick = { go(Reliability.appDetails(context)) }) { Text("Apri le impostazioni di ${Brand.NAME}") }
+                    TextButton(onClick = { go(Reliability.appDetails(context)) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Apri le impostazioni di ${Brand.NAME}") }
                 }
             }
         }
@@ -163,24 +170,31 @@ fun ReliabilityScreen(vm: MainViewModel) {
         if (recent.isEmpty()) {
             item { Text("Ancora nessun avviso.", style = MaterialTheme.typography.bodyMedium) }
         }
-        items(recent, key = { it.slotKey }) { d ->
-            val planned = Instant.ofEpochMilli(d.scheduledAt).atZone(ROME)
-            val late = d.postedAt?.let { (it - d.scheduledAt) / 60_000 }
-            Column {
-                Text(d.title, style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    "Previsto ${planned.format(fmt)} · " + when {
-                        d.postedAt == null -> "mancato"
-                        late != null && late >= 5 -> "arrivato con $late min di ritardo"
-                        else -> "arrivato"
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = when {
-                        d.postedAt == null -> MaterialTheme.colorScheme.error
-                        late != null && late >= 5 -> MaterialTheme.colorScheme.tertiary
-                        else -> okColor()
-                    },
-                )
+        // one stop per notice, newest first
+        if (recent.isNotEmpty()) {
+            item {
+                Route {
+                    recent.forEach { d ->
+                        val planned = Instant.ofEpochMilli(d.scheduledAt).atZone(ROME)
+                        val late = d.postedAt?.let { (it - d.scheduledAt) / 60_000 }
+                        RouteStop {
+                            Text(d.title, style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                "Previsto ${planned.format(fmt)} · " + when {
+                                    d.postedAt == null -> "mancato"
+                                    late != null && late >= 5 -> "arrivato con $late min di ritardo"
+                                    else -> "arrivato"
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = when {
+                                    d.postedAt == null -> MaterialTheme.colorScheme.error
+                                    late != null && late >= 5 -> MaterialTheme.colorScheme.tertiary
+                                    else -> okColor()
+                                },
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -196,7 +210,11 @@ private fun CheckRow(label: String, ok: Boolean, onFix: () -> Unit) {
             )
             Spacer(Modifier.width(12.dp))
             Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            if (!ok) Button(onClick = onFix) { Text("Sistema") }
+        }
+        // under the label, so a long label and a large font never squeeze it
+        if (!ok) {
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = onFix, modifier = Modifier.padding(start = 36.dp).heightIn(min = 48.dp)) { Text("Apri impostazioni") }
         }
     }
 }

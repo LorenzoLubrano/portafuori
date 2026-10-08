@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -18,7 +19,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -44,6 +44,7 @@ import io.github.lorenzolubrano.portafuori.ui.DateField
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
+import io.github.lorenzolubrano.portafuori.ui.SwitchRow
 import io.github.lorenzolubrano.portafuori.ui.UiState
 import java.time.LocalDate
 import java.time.MonthDay
@@ -80,7 +81,7 @@ fun HolidaysScreen(vm: MainViewModel, state: UiState) {
                 occ.forEach { o ->
                     val bin = b.bin(o.binId) ?: return@forEach
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                        BinBadge(bin.entity.colorArgb, bin.entity.iconKey, 22.dp)
+                        BinBadge(bin.entity.colorArgb, bin.entity.iconKey, 24.dp)
                         Spacer(Modifier.width(8.dp))
                         Text(
                             bin.name + ": " + when (o.status) {
@@ -95,8 +96,8 @@ fun HolidaysScreen(vm: MainViewModel, state: UiState) {
                 }
                 if (pending.isNotEmpty()) {
                     Row {
-                        TextButton(onClick = { vm.holidayDecision(pid, pending, keep = true) }) { Text("Si fa") }
-                        TextButton(onClick = { vm.holidayDecision(pid, pending, keep = false) }) { Text("Salta") }
+                        TextButton(onClick = { vm.holidayDecision(pid, pending, keep = true) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Si fa") }
+                        TextButton(onClick = { vm.holidayDecision(pid, pending, keep = false) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Salta") }
                     }
                 }
             }
@@ -117,7 +118,7 @@ fun HolidaysScreen(vm: MainViewModel, state: UiState) {
             }
         }
         item {
-            OutlinedButton(onClick = { adding = true }) {
+            OutlinedButton(onClick = { adding = true }, modifier = Modifier.heightIn(min = 48.dp)) {
                 Icon(Icons.Filled.Add, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
                 Text("Aggiungi festività (es. santo patrono)")
@@ -158,10 +159,7 @@ fun HolidaysScreen(vm: MainViewModel, state: UiState) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(name, { name = it.take(Limits.HOLIDAY_NAME) }, label = { Text("Nome") }, singleLine = true)
                     DateField("Data", date) { date = it }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Ogni anno", modifier = Modifier.weight(1f))
-                        Switch(yearly, { yearly = it })
-                    }
+                    SwitchRow("Ogni anno", yearly, { yearly = it })
                     Spacer(Modifier.height(4.dp))
                 }
             },
