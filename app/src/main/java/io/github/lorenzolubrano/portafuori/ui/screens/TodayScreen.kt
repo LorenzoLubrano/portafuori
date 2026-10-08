@@ -60,6 +60,7 @@ import io.github.lorenzolubrano.portafuori.ui.BinPills
 import io.github.lorenzolubrano.portafuori.ui.Card
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
+import io.github.lorenzolubrano.portafuori.ui.ProfileSwitcher
 import io.github.lorenzolubrano.portafuori.ui.Screen
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
 import io.github.lorenzolubrano.portafuori.ui.Tone
@@ -250,34 +251,6 @@ private fun UpcomingRow(e: Evening, now: Long) {
                     if (e.done) Text("✓ Esposti", style = MaterialTheme.typography.bodySmall, color = okColor())
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun ProfileSwitcher(vm: MainViewModel, state: UiState) {
-    var open by remember { mutableStateOf(false) }
-    val sel = state.selected ?: return
-    Box {
-        OutlinedButton(onClick = { open = true }, modifier = Modifier.padding(end = 8.dp)) {
-            Icon(Icons.Filled.Home, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(sel.profile.name, maxLines = 1)
-        }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            state.bundles.forEach { b ->
-                DropdownMenuItem(
-                    text = { Text(b.profile.name) },
-                    leadingIcon = { if (b.profile.id == sel.profile.id) Icon(Icons.Filled.Check, contentDescription = null) },
-                    onClick = { vm.selectProfile(b.profile.id); open = false },
-                )
-            }
-            HorizontalDivider()
-            DropdownMenuItem(
-                text = { Text("Aggiungi una casa") },
-                leadingIcon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                onClick = { open = false; vm.startWizard(first = false) },
-            )
         }
     }
 }

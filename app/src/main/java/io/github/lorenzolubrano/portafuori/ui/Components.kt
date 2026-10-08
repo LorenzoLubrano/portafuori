@@ -1,6 +1,5 @@
 package io.github.lorenzolubrano.portafuori.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,11 +11,12 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.ChildFriendly
@@ -38,7 +38,11 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -53,15 +57,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.lorenzolubrano.portafuori.data.Bin
 import io.github.lorenzolubrano.portafuori.rules.It
+import io.github.lorenzolubrano.portafuori.ui.theme.Contrast
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -86,48 +92,33 @@ fun binIcon(key: String): ImageVector = when (key) {
 
 fun Long.asColor() = Color(this.toInt())
 
-/** Colour + icon, never colour alone. */
+/** Colour + icon, never colour alone. Ink picked for contrast on the user's colour; pale colours get a dark edge. */
 @Composable
 fun BinBadge(color: Long, icon: String, size: Dp = 36.dp) {
-    val c = color.asColor()
-    val onC = if (c.luminance() > 0.55f) Color(0xFF1B1B1B) else Color.White
-    Box(
-        Modifier.size(size).clip(CircleShape).background(c)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(binIcon(icon), contentDescription = null, tint = onC, modifier = Modifier.size(size * 0.55f))
+    val surface = MaterialTheme.colorScheme.surfaceContainerLowest.toArgb().toLong() and 0xFFFFFFFFL
+    val edge = if (Contrast.needsEdge(color, surface)) Modifier.border(1.5.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape) else Modifier
+    Box(Modifier.size(size).clip(CircleShape).background(color.asColor()).then(edge), contentAlignment = Alignment.Center) {
+        Icon(binIcon(icon), contentDescription = null, tint = Contrast.onColor(color).asColor(), modifier = Modifier.size(size * 0.56f))
     }
 }
 
 @Composable
 fun BinPill(bin: Bin, large: Boolean = false, muted: Boolean = false) {
-    Surface(
-        shape = RoundedCornerShape(50),
-        color = if (muted) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainerLowest,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-    ) {
-        Row(
-            Modifier.padding(start = 4.dp, end = if (large) 16.dp else 12.dp, top = 4.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            BinBadge(bin.entity.colorArgb, bin.entity.iconKey, if (large) 36.dp else 26.dp)
-            Spacer(Modifier.width(8.dp))
-            Text(
-                bin.name,
-                style = if (large) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
-                color = if (muted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = if (large) 48.dp else 32.dp)) {
+        BinBadge(bin.entity.colorArgb, bin.entity.iconKey, if (large) 36.dp else 24.dp)
+        Spacer(Modifier.width(8.dp))
+        Text(
+            bin.name,
+            style = if (large) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
+            color = if (muted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BinPills(bins: List<Bin>, large: Boolean = false, muted: Boolean = false) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         bins.forEach { BinPill(it, large, muted) }
     }
 }
@@ -147,13 +138,13 @@ fun Banner(
         Tone.Warn -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
         Tone.Info -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
     }
-    Surface(color = bg, contentColor = fg, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(start = 16.dp, end = 8.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Surface(color = bg, contentColor = fg, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp))
             Spacer(Modifier.width(12.dp))
             Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-            if (secondary != null) TextButton(onClick = onSecondary) { Text(secondary, color = fg) }
-            if (action != null) TextButton(onClick = onAction) { Text(action, color = fg) }
+            if (secondary != null) TextButton(onClick = onSecondary, modifier = Modifier.heightIn(min = 48.dp)) { Text(secondary, color = fg) }
+            if (action != null) TextButton(onClick = onAction, modifier = Modifier.heightIn(min = 48.dp)) { Text(action, color = fg, style = MaterialTheme.typography.labelLarge) }
         }
     }
 }
@@ -163,10 +154,10 @@ enum class Tone { Error, Warn, Info }
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
     Text(
-        text.uppercase(),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = modifier.padding(top = 20.dp, bottom = 8.dp),
+        text,
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onBackground,
+        modifier = modifier.padding(top = 20.dp, bottom = 4.dp).semantics { heading() },
     )
 }
 
@@ -175,12 +166,11 @@ fun WeekdayChips(selected: Set<DayOfWeek>, onChange: (Set<DayOfWeek>) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
         DayOfWeek.entries.forEach { d ->
             val on = d in selected
-            val name = It.dayName(d)
             Box(
-                Modifier.weight(1f).size(40.dp).clip(CircleShape)
+                Modifier.weight(1f).heightIn(min = 48.dp).clip(CircleShape)
                     .background(if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .clickable { onChange(if (on) selected - d else selected + d) }
-                    .semantics { contentDescription = name + if (on) ", selezionato" else "" },
+                    .toggleable(value = on, role = Role.Checkbox, onValueChange = { onChange(if (on) selected - d else selected + d) })
+                    .semantics { contentDescription = It.dayName(d) },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -193,11 +183,42 @@ fun WeekdayChips(selected: Set<DayOfWeek>, onChange: (Set<DayOfWeek>) -> Unit) {
     }
 }
 
+/** A switch whose label is part of the control: the whole row toggles and TalkBack reads them together. */
+@Composable
+fun SwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit, subtitle: String? = null) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).toggleable(value = checked, role = Role.Switch, onValueChange = onChange).padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            subtitle?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        }
+        Spacer(Modifier.width(12.dp))
+        Switch(checked = checked, onCheckedChange = null)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SegmentedChoice(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        options.forEachIndexed { i, label ->
+            SegmentedButton(
+                selected = i == selected,
+                onClick = { onSelect(i) },
+                shape = SegmentedButtonDefaults.itemShape(index = i, count = options.size),
+                modifier = Modifier.heightIn(min = 48.dp),
+            ) { Text(label, style = MaterialTheme.typography.labelLarge) }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimeField(label: String, time: LocalTime, enabled: Boolean = true, onChange: (LocalTime) -> Unit) {
     var open by remember { mutableStateOf(false) }
-    OutlinedButton(onClick = { open = true }, enabled = enabled) {
+    OutlinedButton(onClick = { open = true }, enabled = enabled, modifier = Modifier.heightIn(min = 48.dp)) {
         Text("$label ${It.time(time)}")
     }
     if (open) {
@@ -234,7 +255,7 @@ fun DatePickDialog(initial: LocalDate, onDismiss: () -> Unit, onPick: (LocalDate
 @Composable
 fun DateField(label: String, date: LocalDate?, onChange: (LocalDate) -> Unit) {
     var open by remember { mutableStateOf(false) }
-    OutlinedButton(onClick = { open = true }) { Text(if (date == null) label else "$label ${It.full(date)}") }
+    OutlinedButton(onClick = { open = true }, modifier = Modifier.heightIn(min = 48.dp)) { Text(if (date == null) label else "$label ${It.full(date)}") }
     if (open) DatePickDialog(date ?: LocalDate.now(), { open = false }, onChange)
 }
 
@@ -250,11 +271,12 @@ fun ChoiceChips(options: List<Pair<String, Boolean>>, onClick: (Int) -> Unit) {
 
 @Composable
 fun Card(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
+    val shape = MaterialTheme.shapes.medium
     Surface(
-        modifier = modifier.fillMaxWidth().let { if (onClick != null) it.clip(RoundedCornerShape(20.dp)).clickable(onClick = onClick) else it },
-        shape = RoundedCornerShape(20.dp),
+        modifier = modifier.fillMaxWidth().let { if (onClick != null) it.clip(shape).clickable(onClick = onClick) else it },
+        shape = shape,
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column(Modifier.padding(16.dp)) { content() }
     }

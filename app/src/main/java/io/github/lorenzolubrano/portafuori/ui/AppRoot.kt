@@ -10,7 +10,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Recycling
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.ui.unit.sp
+import io.github.lorenzolubrano.portafuori.ui.theme.extra
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.Icon
@@ -61,18 +66,30 @@ fun AppRoot(vm: MainViewModel) {
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (topLevel) {
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+                NavigationBar(containerColor = extra().shell) {
                     listOf(
                         Triple(Screen.Today, "Oggi", Icons.Filled.Today),
                         Triple(Screen.Calendar, "Calendario", Icons.Filled.CalendarMonth),
-                        Triple(Screen.Bins, "Bidoni", Icons.Filled.Delete),
+                        Triple(Screen.Bins, "Bidoni", Icons.Filled.Recycling),
                         Triple(Screen.More, "Altro", Icons.Filled.MoreHoriz),
                     ).forEach { (screen, label, icon) ->
                         NavigationBarItem(
                             selected = vm.tab == screen,
                             onClick = { vm.switchTab(screen) },
                             icon = { Icon(icon, contentDescription = null) },
-                            label = { Text(label) },
+                            label = {
+                                BasicText(
+                                    label, maxLines = 1,
+                                    style = MaterialTheme.typography.labelMedium.copy(color = extra().onShell),
+                                    // shrinks only when the label would not fit (large system text); never wraps or cuts
+                                    autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = MaterialTheme.typography.labelMedium.fontSize),
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                indicatorColor = extra().onShell,
+                                selectedIconColor = extra().shell,
+                                unselectedIconColor = extra().onShell,
+                            ),
                         )
                     }
                 }

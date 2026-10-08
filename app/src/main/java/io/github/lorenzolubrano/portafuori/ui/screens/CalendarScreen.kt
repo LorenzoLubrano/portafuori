@@ -62,6 +62,7 @@ import io.github.lorenzolubrano.portafuori.ui.Card
 import io.github.lorenzolubrano.portafuori.ui.DatePickDialog
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
+import io.github.lorenzolubrano.portafuori.ui.ProfileSwitcher
 import io.github.lorenzolubrano.portafuori.ui.UiState
 import io.github.lorenzolubrano.portafuori.ui.asColor
 import java.time.DayOfWeek

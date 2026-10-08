@@ -48,6 +48,7 @@ import io.github.lorenzolubrano.portafuori.ui.ChoiceChips
 import io.github.lorenzolubrano.portafuori.ui.DateField
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
+import io.github.lorenzolubrano.portafuori.ui.ProfileSwitcher
 import io.github.lorenzolubrano.portafuori.ui.Screen
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
 import io.github.lorenzolubrano.portafuori.ui.TimeField
