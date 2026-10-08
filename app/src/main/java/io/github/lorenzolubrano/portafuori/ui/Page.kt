@@ -47,7 +47,12 @@ fun Page(
                         IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro") }
                     }
                 },
-                actions = actions,
+                // text buttons take their ink from primary, which in light Linee is the shell itself: give them the shell's ink
+                actions = {
+                    val row = this
+                    val on = extra().onShell
+                    MaterialTheme(colorScheme = MaterialTheme.colorScheme.copy(primary = on, onSurface = on)) { row.actions() }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = extra().shell,
                     titleContentColor = extra().onShell,

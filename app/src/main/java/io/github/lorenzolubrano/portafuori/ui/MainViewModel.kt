@@ -162,6 +162,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun setTheme(mode: ThemeMode) = launch { settingsStore.setTheme(mode) }
 
+    /** Bin editor draft: lives in the ViewModel so a rotation or a system theme change keeps the edits. */
+    data class BinDraft(val binId: Long?, val name: String, val color: Long, val icon: String, val rules: List<Rule>)
+    var binDraft by mutableStateOf<BinDraft?>(null)
+
     // --- wizard ---
     var wizard by mutableStateOf(WizardDraft())
     fun startWizard(first: Boolean) {

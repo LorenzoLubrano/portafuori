@@ -1,6 +1,7 @@
 package io.github.lorenzolubrano.portafuori.ui.screens
 
 import io.github.lorenzolubrano.portafuori.data.Limits
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,20 +36,22 @@ import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -63,7 +66,6 @@ import io.github.lorenzolubrano.portafuori.rules.ROME
 import io.github.lorenzolubrano.portafuori.rules.Rule
 import io.github.lorenzolubrano.portafuori.rules.RuleType
 import io.github.lorenzolubrano.portafuori.rules.Schedule
-import io.github.lorenzolubrano.portafuori.ui.BinBadge
 import io.github.lorenzolubrano.portafuori.ui.Card
 import io.github.lorenzolubrano.portafuori.ui.ChoiceChips
 import io.github.lorenzolubrano.portafuori.ui.DateField
@@ -71,12 +73,17 @@ import io.github.lorenzolubrano.portafuori.ui.DatePickDialog
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
 import io.github.lorenzolubrano.portafuori.ui.ProfileSwitcher
+import io.github.lorenzolubrano.portafuori.ui.Roundel
 import io.github.lorenzolubrano.portafuori.ui.Screen
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
+import io.github.lorenzolubrano.portafuori.ui.SwitchRow
 import io.github.lorenzolubrano.portafuori.ui.UiState
 import io.github.lorenzolubrano.portafuori.ui.WeekdayChips
+import io.github.lorenzolubrano.portafuori.ui.Wording
 import io.github.lorenzolubrano.portafuori.ui.asColor
 import io.github.lorenzolubrano.portafuori.ui.binIcon
+import io.github.lorenzolubrano.portafuori.ui.theme.Contrast
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.MonthDay
 import java.time.temporal.TemporalAdjusters
@@ -102,7 +109,7 @@ fun BinsScreen(vm: MainViewModel, state: UiState) {
             }
             Card(onClick = { vm.open(Screen.BinEditor(bin.id)) }) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    BinBadge(bin.entity.colorArgb, bin.entity.iconKey, 40.dp)
+                    Roundel(bin)
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(bin.name, style = MaterialTheme.typography.titleMedium)
@@ -140,6 +147,8 @@ fun BinsScreen(vm: MainViewModel, state: UiState) {
                 Text("Modifica", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
         }
+        // room for the floating button, so it never covers the last row
+        item { Spacer(Modifier.height(72.dp)) }
     }
 }
 
@@ -148,42 +157,61 @@ fun BinsScreen(vm: MainViewModel, state: UiState) {
 fun BinEditorScreen(vm: MainViewModel, state: UiState, binId: Long?) {
     val b = state.selected ?: return
     val existing = binId?.let { b.bin(it) }
-    var name by remember { mutableStateOf(existing?.name ?: "") }
-    var color by remember { mutableStateOf(existing?.entity?.colorArgb ?: Presets.colors[8]) }
-    var icon by remember { mutableStateOf(existing?.entity?.iconKey ?: "bag") }
-    val rules = remember { mutableStateListOf<Rule>().apply { addAll(existing?.rules.orEmpty()) } }
-    var editing by remember { mutableStateOf<Int?>(null) }
+    val original = existing?.let { MainViewModel.BinDraft(binId, it.name, it.entity.colorArgb, it.entity.iconKey, it.rules) }
+        ?: MainViewModel.BinDraft(null, "", Presets.colors[8], "bag", emptyList())
+    // the draft in the ViewModel wins while it belongs to this bin; every edit writes it back
+    val draft = vm.binDraft?.takeIf { it.binId == binId } ?: original
+    fun edit(d: MainViewModel.BinDraft) { vm.binDraft = d }
+    val rules = draft.rules
+    var editing by rememberSaveable { mutableStateOf<Int?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var confirmExit by remember { mutableStateOf(false) }
+    val dirty = draft != original
+
+    fun leave() { if (dirty) confirmExit = true else { vm.binDraft = null; vm.back() } }
+    BackHandler(onBack = ::leave)
 
     fun save() {
-        val entity = (existing?.entity ?: BinEntity(profileId = b.profile.id, name = "", colorArgb = color, iconKey = icon))
-            .copy(name = name.trim().ifBlank { "Bidone" }, colorArgb = color, iconKey = icon)
-        vm.saveBin(entity, rules.toList())
+        val entity = (existing?.entity ?: BinEntity(profileId = b.profile.id, name = "", colorArgb = draft.color, iconKey = draft.icon))
+            .copy(name = draft.name.trim().ifBlank { "Bidone" }, colorArgb = draft.color, iconKey = draft.icon)
+        vm.saveBin(entity, rules)
+        vm.message = "Bidone salvato."
+        vm.binDraft = null
         vm.back()
     }
 
     Page(
         title = if (existing == null) "Nuovo bidone" else existing.name,
-        onBack = { vm.back() },
+        onBack = ::leave,
         actions = {
             if (existing != null) IconButton(onClick = { confirmDelete = true }) { Icon(Icons.Filled.Delete, "Elimina bidone") }
             TextButton(onClick = ::save) { Text("Salva") }
         },
     ) {
         item {
-            OutlinedTextField(name, { name = it.take(Limits.BIN_NAME) }, label = { Text("Nome") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(draft.name, { edit(draft.copy(name = it.take(Limits.BIN_NAME))) }, label = { Text("Nome") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         }
         item { SectionTitle("Colore") }
         item {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                val bg = MaterialTheme.colorScheme.background.toArgb().toLong() and 0xFFFFFFFFL
                 Presets.colors.forEach { c ->
+                    val chosen = c == draft.color
                     Box(
-                        Modifier.size(40.dp).clip(CircleShape).background(c.asColor())
-                            .border(if (c == color) 3.dp else 1.dp, if (c == color) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, CircleShape)
-                            .clickable { color = c },
+                        Modifier.size(48.dp).clip(CircleShape)
+                            .then(
+                                when {
+                                    chosen -> Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape).padding(5.dp).clip(CircleShape)
+                                    Contrast.needsEdge(c, bg) -> Modifier.border(1.5.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape)
+                                    else -> Modifier
+                                },
+                            )
+                            .background(c.asColor())
+                            .clickable { edit(draft.copy(color = c)) }
+                            .semantics { contentDescription = Wording.colorName(c); selected = chosen },
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (c == color) Icon(Icons.Filled.Check, contentDescription = "Colore scelto", tint = Color.White)
+                        if (chosen) Icon(Icons.Filled.Check, contentDescription = null, tint = Contrast.onColor(c).asColor())
                     }
                 }
             }
@@ -192,11 +220,13 @@ fun BinEditorScreen(vm: MainViewModel, state: UiState, binId: Long?) {
         item {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Presets.icons.forEach { key ->
+                    val chosen = key == draft.icon
                     Box(
-                        Modifier.size(44.dp).clip(CircleShape)
-                            .background(if (key == icon) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh)
-                            .clickable { icon = key }
-                            .semantics { contentDescription = "Icona $key" },
+                        Modifier.size(48.dp).clip(CircleShape)
+                            .background(if (chosen) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh)
+                            .then(if (chosen) Modifier.border(2.dp, MaterialTheme.colorScheme.onSurface, CircleShape) else Modifier)
+                            .clickable { edit(draft.copy(icon = key)) }
+                            .semantics { contentDescription = "Icona ${Wording.iconName(key)}"; selected = chosen },
                         contentAlignment = Alignment.Center,
                     ) { Icon(binIcon(key), contentDescription = null) }
                 }
@@ -211,7 +241,7 @@ fun BinEditorScreen(vm: MainViewModel, state: UiState, binId: Long?) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(It.describe(rules[i]), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                     IconButton(onClick = { editing = i }) { Icon(Icons.Filled.Edit, "Modifica regola") }
-                    IconButton(onClick = { rules.removeAt(i) }) { Icon(Icons.Filled.Close, "Elimina regola") }
+                    IconButton(onClick = { edit(draft.copy(rules = rules.filterIndexed { j, _ -> j != i })) }) { Icon(Icons.Filled.Close, "Elimina regola") }
                 }
             }
         }
@@ -224,7 +254,7 @@ fun BinEditorScreen(vm: MainViewModel, state: UiState, binId: Long?) {
         }
         item { SectionTitle("Anteprima") }
         item {
-            val preview = previewDates(rules.toList(), 8)
+            val preview = previewDates(rules, 8)
             Text(
                 if (preview.isEmpty()) "Nessuna data nei prossimi 12 mesi." else preview.joinToString(" · ") { It.weekdayDay(it) },
                 style = MaterialTheme.typography.bodyMedium,
@@ -237,7 +267,10 @@ fun BinEditorScreen(vm: MainViewModel, state: UiState, binId: Long?) {
         RuleEditorDialog(
             initial = rules.getOrNull(idx),
             onDismiss = { editing = null },
-            onSave = { r -> if (idx >= 0) rules[idx] = r else rules.add(r); editing = null },
+            onSave = { r ->
+                edit(draft.copy(rules = if (idx >= 0) rules.mapIndexed { j, old -> if (j == idx) r else old } else rules + r))
+                editing = null
+            },
         )
     }
     if (confirmDelete && existing != null) {
@@ -245,8 +278,17 @@ fun BinEditorScreen(vm: MainViewModel, state: UiState, binId: Long?) {
             onDismissRequest = { confirmDelete = false },
             title = { Text("Eliminare «${existing.name}»?") },
             text = { Text("Spariscono anche le sue regole e le modifiche ai singoli giorni.") },
-            confirmButton = { TextButton(onClick = { vm.deleteBin(existing.id); confirmDelete = false; vm.back() }) { Text("Elimina") } },
+            confirmButton = { TextButton(onClick = { vm.deleteBin(existing.id); confirmDelete = false; vm.binDraft = null; vm.back() }) { Text("Elimina") } },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Annulla") } },
+        )
+    }
+    if (confirmExit) {
+        AlertDialog(
+            onDismissRequest = { confirmExit = false },
+            title = { Text("Uscire senza salvare?") },
+            text = { Text("Le modifiche andranno perse.") },
+            confirmButton = { TextButton(onClick = { confirmExit = false; vm.binDraft = null; vm.back() }) { Text("Esci") } },
+            dismissButton = { TextButton(onClick = { confirmExit = false }) { Text("Resta") } },
         )
     }
 }
@@ -266,18 +308,20 @@ fun previewDates(rules: List<Rule>, count: Int): List<LocalDate> {
 @Composable
 fun RuleEditorDialog(initial: Rule?, onDismiss: () -> Unit, onSave: (Rule) -> Unit) {
     val today = LocalDate.now(ROME)
-    var type by remember { mutableStateOf(initial?.type ?: RuleType.WEEKLY) }
-    var days by remember { mutableStateOf(initial?.weekdays ?: emptySet()) }
-    var interval by remember { mutableStateOf(initial?.intervalWeeks?.coerceAtLeast(2) ?: 2) }
-    var anchor by remember { mutableStateOf(initial?.anchor) }
+    var type by rememberSaveable { mutableStateOf(initial?.type ?: RuleType.WEEKLY) }
+    var days by rememberSaveable(stateSaver = listSaver({ it.map(DayOfWeek::getValue) }, { it.map(DayOfWeek::of).toSet() })) {
+        mutableStateOf(initial?.weekdays ?: emptySet())
+    }
+    var interval by rememberSaveable { mutableIntStateOf(initial?.intervalWeeks?.coerceAtLeast(2) ?: 2) }
+    var anchor by rememberSaveable { mutableStateOf(initial?.anchor) }
     var ordinals by remember { mutableStateOf(initial?.ordinals ?: setOf(1)) }
     var dates by remember { mutableStateOf(initial?.dates ?: emptySet()) }
-    var seasonOn by remember { mutableStateOf(initial?.seasonStart != null) }
+    var seasonOn by rememberSaveable { mutableStateOf(initial?.seasonStart != null) }
     var seasonStart by remember { mutableStateOf(initial?.seasonStart ?: MonthDay.of(5, 1)) }
     var seasonEnd by remember { mutableStateOf(initial?.seasonEnd ?: MonthDay.of(10, 31)) }
-    var validOn by remember { mutableStateOf(initial?.validFrom != null || initial?.validUntil != null) }
-    var validFrom by remember { mutableStateOf(initial?.validFrom) }
-    var validUntil by remember { mutableStateOf(initial?.validUntil) }
+    var validOn by rememberSaveable { mutableStateOf(initial?.validFrom != null || initial?.validUntil != null) }
+    var validFrom by rememberSaveable { mutableStateOf(initial?.validFrom) }
+    var validUntil by rememberSaveable { mutableStateOf(initial?.validUntil) }
     var pickDate by remember { mutableStateOf(false) }
     var pickSeason by remember { mutableStateOf<Int?>(null) }
 
@@ -305,7 +349,7 @@ fun RuleEditorDialog(initial: Rule?, onDismiss: () -> Unit, onSave: (Rule) -> Un
         )
     }
 
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             Page(
                 title = if (initial == null) "Nuova regola" else "Modifica regola",
@@ -313,7 +357,7 @@ fun RuleEditorDialog(initial: Rule?, onDismiss: () -> Unit, onSave: (Rule) -> Un
                 actions = { TextButton(onClick = { build()?.let(onSave) }, enabled = build() != null) { Text("OK") } },
             ) {
                 item {
-                    val types = listOf(RuleType.WEEKLY to "Ogni settimana", RuleType.EVERY_N_WEEKS to "Ogni N settimane", RuleType.MONTHLY_NTH to "N-esimo del mese", RuleType.FIXED_DATES to "Date fisse")
+                    val types = listOf(RuleType.WEEKLY to "Ogni settimana", RuleType.EVERY_N_WEEKS to "Ogni N settimane", RuleType.MONTHLY_NTH to "1°, 2°… del mese", RuleType.FIXED_DATES to "Date fisse")
                     ChoiceChips(types.map { it.second to (it.first == type) }) { type = types[it].first }
                 }
                 if (type != RuleType.FIXED_DATES) {
@@ -359,12 +403,7 @@ fun RuleEditorDialog(initial: Rule?, onDismiss: () -> Unit, onSave: (Rule) -> Un
                     }
                     else -> Unit
                 }
-                item {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Solo in un periodo dell'anno", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                        Switch(seasonOn, { seasonOn = it })
-                    }
-                }
+                item { SwitchRow("Solo in un periodo dell'anno", seasonOn, { seasonOn = it }) }
                 if (seasonOn) {
                     item {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -373,12 +412,7 @@ fun RuleEditorDialog(initial: Rule?, onDismiss: () -> Unit, onSave: (Rule) -> Un
                         }
                     }
                 }
-                item {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Valida solo tra due date", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                        Switch(validOn, { validOn = it })
-                    }
-                }
+                item { SwitchRow("Valida solo tra due date", validOn, { validOn = it }) }
                 if (validOn) {
                     item {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
