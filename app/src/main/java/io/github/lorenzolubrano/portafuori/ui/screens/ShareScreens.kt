@@ -26,6 +26,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,10 +39,11 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentPaste
@@ -53,6 +55,7 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -72,6 +75,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
@@ -89,12 +93,17 @@ import io.github.lorenzolubrano.portafuori.rules.ROME
 import io.github.lorenzolubrano.portafuori.share.Qr
 import io.github.lorenzolubrano.portafuori.share.ShareCodec
 import io.github.lorenzolubrano.portafuori.ui.BinBadge
-import io.github.lorenzolubrano.portafuori.ui.BinPills
 import io.github.lorenzolubrano.portafuori.ui.Card
 import io.github.lorenzolubrano.portafuori.ui.MainViewModel
 import io.github.lorenzolubrano.portafuori.ui.Page
+import io.github.lorenzolubrano.portafuori.ui.Route
+import io.github.lorenzolubrano.portafuori.ui.RouteStop
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
+import io.github.lorenzolubrano.portafuori.ui.Station
+import io.github.lorenzolubrano.portafuori.ui.StopBins
 import io.github.lorenzolubrano.portafuori.ui.UiState
+import io.github.lorenzolubrano.portafuori.ui.Wording
+import io.github.lorenzolubrano.portafuori.ui.theme.extra
 import java.io.File
 import java.time.Instant
 import java.time.LocalDate
@@ -144,27 +153,27 @@ fun ShareScreen(vm: MainViewModel, state: UiState) {
                 }
             }
             item {
-                if (qr != null) {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Image(
-                            qr.asImageBitmap(), contentDescription = "QR del calendario di ${b.profile.name}",
-                            modifier = Modifier.fillMaxWidth(0.8f).aspectRatio(1f).clip(RoundedCornerShape(16.dp)).background(Color.White)
-                                .clickable { fullscreen = true },
+                Station {
+                    if (qr != null) {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Image(
+                                qr.asImageBitmap(), contentDescription = "QR del calendario di ${b.profile.name}",
+                                modifier = Modifier.fillMaxWidth(0.85f).aspectRatio(1f).clip(MaterialTheme.shapes.medium).background(Color.White)
+                                    .clickable { fullscreen = true },
+                            )
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "Tocca il QR per ingrandirlo.", style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                    } else {
+                        Text("Il calendario è troppo grande per un QR: usa «Invia file».", style = MaterialTheme.typography.bodyLarge)
                     }
-                    Text(
-                        "Tocca il QR per ingrandirlo.", style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                } else {
-                    Card { Text("Il calendario è troppo grande per un QR: usa «Invia file».") }
-                }
-            }
-            item {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (qr != null) ActionButton(Icons.Filled.Share, "Invia come immagine") { shareQrImage(context, qr, b, payload) }
-                    ActionButton(Icons.Filled.Description, "Invia file") { shareJsonFile(context, b, ShareCodec.encode(vm.shareEnvelope(b))) }
-                    ActionButton(Icons.Filled.ContentCopy, "Copia codice") {
+                    HorizontalDivider(Modifier.padding(vertical = 10.dp), color = extra().line)
+                    if (qr != null) ActionRow(Icons.Filled.Share, "Invia come immagine") { shareQrImage(context, qr, b, payload) }
+                    ActionRow(Icons.Filled.Description, "Invia file") { shareJsonFile(context, b, ShareCodec.encode(vm.shareEnvelope(b))) }
+                    ActionRow(Icons.Filled.ContentCopy, "Copia codice") {
                         context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("${Brand.NAME}", payload))
                         vm.message = "Codice copiato: incollalo in una chat."
                     }
@@ -173,11 +182,17 @@ fun ShareScreen(vm: MainViewModel, state: UiState) {
         }
         item { SectionTitle("Importa un calendario") }
         item {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                ActionButton(Icons.Filled.QrCodeScanner, "Scansiona QR") { vm.open(io.github.lorenzolubrano.portafuori.ui.Screen.Scan) }
-                ActionButton(Icons.Filled.Image, "Da un'immagine") { pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
-                ActionButton(Icons.Filled.Description, "Da un file") { pickFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
-                ActionButton(Icons.Filled.ContentPaste, "Incolla codice") { pasting = true }
+            Button(onClick = { vm.open(io.github.lorenzolubrano.portafuori.ui.Screen.Scan) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
+                Icon(Icons.Filled.QrCodeScanner, contentDescription = null)
+                Spacer(Modifier.width(10.dp))
+                Text("Scansiona QR", style = MaterialTheme.typography.titleMedium)
+            }
+        }
+        item {
+            Card {
+                ActionRow(Icons.Filled.Image, "Da un'immagine") { pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+                ActionRow(Icons.Filled.Description, "Da un file") { pickFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
+                ActionRow(Icons.Filled.ContentPaste, "Incolla codice") { pasting = true }
             }
         }
         item { SectionTitle("Backup") }
@@ -189,9 +204,9 @@ fun ShareScreen(vm: MainViewModel, state: UiState) {
             )
         }
         item {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (state.bundles.isNotEmpty()) ActionButton(Icons.Filled.Save, "Salva backup") { saveBackup.launch("portafuori-backup-${LocalDate.now(ROME)}.json") }
-                ActionButton(Icons.Filled.Restore, "Ripristina backup") { pickBackup.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
+            Card {
+                if (state.bundles.isNotEmpty()) ActionRow(Icons.Filled.Save, "Salva backup") { saveBackup.launch("portafuori-backup-${LocalDate.now(ROME)}.json") }
+                ActionRow(Icons.Filled.Restore, "Ripristina backup") { pickBackup.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
             }
         }
     }
@@ -219,12 +234,16 @@ fun ShareScreen(vm: MainViewModel, state: UiState) {
     }
 }
 
+/** A quiet action: icon and words on one tappable row. */
 @Composable
-private fun ActionButton(icon: ImageVector, label: String, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick) {
-        Icon(icon, contentDescription = null)
-        Spacer(Modifier.width(8.dp))
-        Text(label)
+private fun ActionRow(icon: ImageVector, label: String, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(MaterialTheme.shapes.small).clickable(role = Role.Button, onClick = onClick).padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+        Spacer(Modifier.width(16.dp))
+        Text(label, style = MaterialTheme.typography.titleMedium)
     }
 }
 
@@ -290,10 +309,13 @@ fun ScanScreen(vm: MainViewModel) {
                 Card {
                     Text("Serve la fotocamera solo per leggere il QR. Nessuna foto viene salvata.")
                     Spacer(Modifier.height(8.dp))
-                    Button(onClick = { ask.launch(Manifest.permission.CAMERA) }) { Text("Consenti fotocamera") }
+                    Button(onClick = { ask.launch(Manifest.permission.CAMERA) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Consenti fotocamera") }
                 }
             } else {
-                Box(Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(24.dp)).background(Color.Black)) {
+                Box(
+                    Modifier.fillMaxWidth().aspectRatio(1f).clip(MaterialTheme.shapes.large).background(Color.Black)
+                        .border(4.dp, extra().stationFrame, MaterialTheme.shapes.large),
+                ) {
                     AndroidView(
                         modifier = Modifier.fillMaxSize(),
                         factory = { ctx ->
@@ -396,13 +418,17 @@ fun ImportPreviewScreen(vm: MainViewModel, state: UiState) {
             }
             if (!isBackup) {
                 SectionTitle("Prossime 4 settimane")
-                pb.upcomingEvenings(today, today.plusDays(27)).forEach { e ->
-                    Row(Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            It.weekdayDay(e.window.start.toLocalDate()) + if (e.window.start.hour >= 12) " sera" else " mattina",
-                            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.width(110.dp),
-                        )
-                        BinPills(e.bins)
+                Route {
+                    pb.upcomingEvenings(today, today.plusDays(27)).forEach { e ->
+                        RouteStop {
+                            Text(
+                                It.weekdayDay(e.window.start.toLocalDate()) + if (e.window.start.hour >= 12) " sera" else " mattina",
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            Text(Wording.ritiro(e.collectionDate), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Spacer(Modifier.height(4.dp))
+                            StopBins(e.bins)
+                        }
                     }
                 }
             }
