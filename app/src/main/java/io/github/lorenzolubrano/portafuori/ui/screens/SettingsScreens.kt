@@ -2,13 +2,19 @@ package io.github.lorenzolubrano.portafuori.ui.screens
 
 import io.github.lorenzolubrano.portafuori.data.Limits
 import io.github.lorenzolubrano.portafuori.Brand
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AddHome
@@ -16,7 +22,6 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
@@ -24,7 +29,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,10 +38,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import io.github.lorenzolubrano.portafuori.BuildConfig
+import io.github.lorenzolubrano.portafuori.data.ProfileEntity
 import io.github.lorenzolubrano.portafuori.data.ThemeMode
 import io.github.lorenzolubrano.portafuori.rules.CalendarMode
 import io.github.lorenzolubrano.portafuori.rules.ExposureMode
@@ -51,6 +57,8 @@ import io.github.lorenzolubrano.portafuori.ui.Page
 import io.github.lorenzolubrano.portafuori.ui.ProfileSwitcher
 import io.github.lorenzolubrano.portafuori.ui.Screen
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
+import io.github.lorenzolubrano.portafuori.ui.SegmentedChoice
+import io.github.lorenzolubrano.portafuori.ui.SwitchRow
 import io.github.lorenzolubrano.portafuori.ui.TimeField
 import io.github.lorenzolubrano.portafuori.ui.UiState
 import io.github.lorenzolubrano.portafuori.ui.theme.okColor
@@ -73,12 +81,8 @@ fun MoreScreen(vm: MainViewModel, state: UiState) {
         item { MenuRow(Icons.Filled.AddHome, "Aggiungi una casa", "Seconda casa, casa dei genitori…") { vm.startWizard(first = false) } }
         item { SectionTitle("Tema") }
         item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Palette, contentDescription = null)
-                Spacer(Modifier.width(12.dp))
-                val modes = listOf(ThemeMode.SYSTEM to "Sistema", ThemeMode.LIGHT to "Chiaro", ThemeMode.DARK to "Scuro")
-                ChoiceChips(modes.map { it.second to (it.first == state.settings.theme) }) { vm.setTheme(modes[it].first) }
-            }
+            val modes = listOf(ThemeMode.SYSTEM to "Come il telefono", ThemeMode.LIGHT to "Chiaro", ThemeMode.DARK to "Scuro")
+            SegmentedChoice(modes.map { it.second }, selected = modes.indexOfFirst { it.first == state.settings.theme }) { vm.setTheme(modes[it].first) }
         }
         item { SectionTitle("Informazioni") }
         item { MenuRow(Icons.Filled.Info, "Info e privacy", "Versione ${BuildConfig.VERSION_NAME} · nessun dato lascia il telefono") { vm.open(Screen.Info) } }
@@ -88,14 +92,18 @@ fun MoreScreen(vm: MainViewModel, state: UiState) {
 @Composable
 fun MenuRow(icon: ImageVector, title: String, subtitle: String, subtitleColor: androidx.compose.ui.graphics.Color? = null, onClick: () -> Unit) {
     Card(onClick = onClick) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Row(Modifier.heightIn(min = 64.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center,
+            ) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer) }
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = subtitleColor ?: MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = subtitleColor ?: MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
+            Spacer(Modifier.width(8.dp))
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -106,59 +114,62 @@ private val PHONE = Regex("""(?:\+39\s?)?(?:\d[\s.]?){6,11}\d""")
 fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
     val b = state.selected ?: return
     val context = LocalContext.current
-    var p by remember(b.profile.id) { mutableStateOf(b.profile) }
+    // the draft lives in the ViewModel so a rotation or a theme change keeps the edits
+    val p = vm.profileDraft?.takeIf { it.id == b.profile.id } ?: b.profile
+    fun set(x: ProfileEntity) { vm.profileDraft = x }
     var confirmDelete by remember { mutableStateOf(false) }
     val dirty = p != b.profile
+    fun leave(save: Boolean) {
+        if (save && dirty) vm.updateProfile(p)
+        vm.profileDraft = null
+        vm.back()
+    }
+    // system back leaves without saving, as before; the arrow and «Salva» save
+    BackHandler { leave(save = false) }
 
     Page(
         title = "Impostazioni",
-        onBack = { if (dirty) vm.updateProfile(p); vm.back() },
-        actions = { TextButton(onClick = { vm.updateProfile(p); vm.back() }, enabled = dirty) { Text("Salva") } },
+        onBack = { leave(save = true) },
+        actions = { TextButton(onClick = { leave(save = true) }, enabled = dirty) { Text("Salva") } },
     ) {
         item {
-            OutlinedTextField(p.name, { p = p.copy(name = it.take(Limits.PROFILE_NAME)) }, label = { Text("Nome") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(p.name, { set(p.copy(name = it.take(Limits.PROFILE_NAME))) }, label = { Text("Nome") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         }
         item {
-            OutlinedTextField(p.areaNote, { p = p.copy(areaNote = it.take(Limits.AREA)) }, label = { Text("Zona o via") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(p.areaNote, { set(p.copy(areaNote = it.take(Limits.AREA))) }, label = { Text("Zona o via") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         }
         item { SectionTitle("Calendario") }
         item {
-            RadioLine("Indica il giorno del ritiro", p.calendarMode == CalendarMode.COLLECTION_DAY) { p = p.copy(calendarMode = CalendarMode.COLLECTION_DAY) }
-            RadioLine("Indica la sera in cui esporre", p.calendarMode == CalendarMode.EXPOSE_DAY) { p = p.copy(calendarMode = CalendarMode.EXPOSE_DAY) }
+            RadioLine("Indica il giorno del ritiro", p.calendarMode == CalendarMode.COLLECTION_DAY) { set(p.copy(calendarMode = CalendarMode.COLLECTION_DAY)) }
+            RadioLine("Indica la sera in cui esporre", p.calendarMode == CalendarMode.EXPOSE_DAY) { set(p.copy(calendarMode = CalendarMode.EXPOSE_DAY)) }
             Spacer(Modifier.height(8.dp))
-            RadioLine("Si espone la sera prima", p.exposureMode == ExposureMode.EVENING_BEFORE) { p = p.copy(exposureMode = ExposureMode.EVENING_BEFORE) }
-            RadioLine("Si espone la mattina stessa", p.exposureMode == ExposureMode.SAME_MORNING) { p = p.copy(exposureMode = ExposureMode.SAME_MORNING) }
+            RadioLine("Si espone la sera prima", p.exposureMode == ExposureMode.EVENING_BEFORE) { set(p.copy(exposureMode = ExposureMode.EVENING_BEFORE)) }
+            RadioLine("Si espone la mattina stessa", p.exposureMode == ExposureMode.SAME_MORNING) { set(p.copy(exposureMode = ExposureMode.SAME_MORNING)) }
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TimeField("Dalle", p.exposeStart) { p = p.copy(exposeStart = it) }
-                TimeField("Entro le", p.exposeEnd) { p = p.copy(exposeEnd = it) }
+                TimeField("Dalle", p.exposeStart) { set(p.copy(exposeStart = it)) }
+                TimeField("Entro le", p.exposeEnd) { set(p.copy(exposeEnd = it)) }
             }
         }
         item { SectionTitle("Festivi") }
         item {
             val opts = listOf(HolidayPolicy.ASK to "Chiedimi", HolidayPolicy.KEEP to "Si ritira comunque", HolidayPolicy.SKIP to "Salta")
-            ChoiceChips(opts.map { it.second to (it.first == p.holidayPolicy) }) { p = p.copy(holidayPolicy = opts[it].first) }
+            ChoiceChips(opts.map { it.second to (it.first == p.holidayPolicy) }) { set(p.copy(holidayPolicy = opts[it].first)) }
         }
         item { SectionTitle("Avvisi") }
         item {
-            ReminderLine("Esponi", "L'avviso principale", p.exposeReminderOn, p.exposeReminderAt, { p = p.copy(exposeReminderOn = it) }, { p = p.copy(exposeReminderAt = it) })
+            ReminderLine("Esponi", "L'avviso principale", p.exposeReminderOn, p.exposeReminderAt, { set(p.copy(exposeReminderOn = it)) }, { set(p.copy(exposeReminderAt = it)) })
         }
         item {
-            ReminderLine("Prepara", "Un avviso prima, per svuotare i cestini", p.prepareReminderOn, p.prepareReminderAt, { p = p.copy(prepareReminderOn = it) }, { p = p.copy(prepareReminderAt = it) })
+            ReminderLine("Prepara", "Un avviso prima, per svuotare i cestini", p.prepareReminderOn, p.prepareReminderAt, { set(p.copy(prepareReminderOn = it)) }, { set(p.copy(prepareReminderAt = it)) })
         }
         item {
-            ReminderLine("Ritira", "Il giorno del ritiro", p.retrieveReminderOn, p.retrieveReminderAt, { p = p.copy(retrieveReminderOn = it) }, { p = p.copy(retrieveReminderAt = it) })
+            ReminderLine("Ritira", "Il giorno del ritiro", p.retrieveReminderOn, p.retrieveReminderAt, { set(p.copy(retrieveReminderOn = it)) }, { set(p.copy(retrieveReminderAt = it)) })
         }
         item {
             Card {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Insistente", style = MaterialTheme.typography.titleMedium)
-                        Text("Ripete l'avviso dopo 45 minuti se non premi «Fatto»", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Switch(p.insistent, { p = p.copy(insistent = it) })
-                }
+                SwitchRow("Insistente", p.insistent, { set(p.copy(insistent = it)) }, subtitle = "Ripete l'avviso dopo 45 minuti se non premi «Fatto»")
             }
         }
         item { SectionTitle("Pausa vacanza") }
@@ -166,15 +177,15 @@ fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
             Text("Niente avvisi in questi giorni: il calendario resta com'è.", style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                DateField("Dal", p.pausedFrom) { p = p.copy(pausedFrom = it, pausedTo = p.pausedTo ?: it.plusDays(7)) }
-                DateField("Al", p.pausedTo) { p = p.copy(pausedTo = it) }
-                if (p.pausedFrom != null) TextButton(onClick = { p = p.copy(pausedFrom = null, pausedTo = null) }) { Text("Togli") }
+                DateField("Dal", p.pausedFrom) { set(p.copy(pausedFrom = it, pausedTo = p.pausedTo ?: it.plusDays(7))) }
+                DateField("Al", p.pausedTo) { set(p.copy(pausedTo = it)) }
+                if (p.pausedFrom != null) TextButton(onClick = { set(p.copy(pausedFrom = null, pausedTo = null)) }) { Text("Togli") }
             }
         }
         item { SectionTitle("Note") }
         item {
             OutlinedTextField(
-                p.notes, { p = p.copy(notes = it.take(Limits.NOTES)) }, minLines = 3, modifier = Modifier.fillMaxWidth(),
+                p.notes, { set(p.copy(notes = it.take(Limits.NOTES))) }, minLines = 3, modifier = Modifier.fillMaxWidth(),
                 label = { Text("Isola ecologica, numero ingombranti, gestore…") },
             )
         }
@@ -204,7 +215,7 @@ fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
             onDismissRequest = { confirmDelete = false },
             title = { Text("Eliminare «${b.profile.name}»?") },
             text = { Text("Spariscono bidoni, regole e avvisi di questa casa. Non si può annullare, salvo da un backup.") },
-            confirmButton = { TextButton(onClick = { confirmDelete = false; vm.deleteProfile(b.profile.id) }) { Text("Elimina") } },
+            confirmButton = { TextButton(onClick = { confirmDelete = false; vm.profileDraft = null; vm.deleteProfile(b.profile.id) }) { Text("Elimina") } },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Annulla") } },
         )
     }
@@ -215,21 +226,19 @@ fun InfoScreen(vm: MainViewModel) {
     val context = LocalContext.current
     Page(title = "Info e privacy", onBack = { vm.back() }) {
         item {
-            Card {
-                Text("${Brand.NAME} ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.titleLarge)
+            Column {
+                Text("${Brand.NAME} ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(4.dp))
-                Text("Stasera cosa esce? Te lo dice ${Brand.NAME}, la sera prima.", style = MaterialTheme.typography.bodyMedium)
+                Text("Stasera cosa esce? Te lo dice ${Brand.NAME}, la sera prima.", style = MaterialTheme.typography.bodyLarge)
             }
         }
         item { SectionTitle("Privacy") }
         item {
-            Card {
-                Text(
-                    "${Brand.NAME} non ha il permesso di usare Internet: i tuoi dati restano sul telefono. " +
-                        "Niente account, niente pubblicità, niente statistiche. Condividi il calendario solo quando lo decidi tu, con un QR o un file.",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
+            Text(
+                "${Brand.NAME} non ha il permesso di usare Internet: i tuoi dati restano sul telefono. " +
+                    "Niente account, niente pubblicità, niente statistiche. Condividi il calendario solo quando lo decidi tu, con un QR o un file.",
+                style = MaterialTheme.typography.bodyLarge,
+            )
         }
         item { SectionTitle("Sostieni ${Brand.NAME}") }
         item {
@@ -251,23 +260,19 @@ fun InfoScreen(vm: MainViewModel) {
         }
         item { SectionTitle("Attenzione") }
         item {
-            Card {
-                Text(
-                    "${Brand.NAME} ricorda quello che hai inserito tu. Verifica sempre il calendario ufficiale del tuo comune, " +
-                        "soprattutto a inizio anno, nei festivi e in caso di scioperi.",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
+            Text(
+                "${Brand.NAME} ricorda quello che hai inserito tu. Verifica sempre il calendario ufficiale del tuo comune, " +
+                    "soprattutto a inizio anno, nei festivi e in caso di scioperi.",
+                style = MaterialTheme.typography.bodyLarge,
+            )
         }
         item { SectionTitle("Festività nazionali") }
         item {
-            Card {
-                Text(
-                    "Calcolate sul telefono, Pasqua compresa. Dal 2026 c'è anche il 4 ottobre, San Francesco d'Assisi (Legge 151/2025). " +
-                        "Il santo patrono si aggiunge da «Festività ed eccezioni».",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
+            Text(
+                "Calcolate sul telefono, Pasqua compresa. Dal 2026 c'è anche il 4 ottobre, San Francesco d'Assisi (Legge 151/2025). " +
+                    "Il santo patrono si aggiunge da «Festività ed eccezioni».",
+                style = MaterialTheme.typography.bodyLarge,
+            )
         }
         item { SectionTitle("Licenze") }
         item {

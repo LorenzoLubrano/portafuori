@@ -165,6 +165,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /** Bin editor draft: lives in the ViewModel so a rotation or a system theme change keeps the edits. */
     data class BinDraft(val binId: Long?, val name: String, val color: Long, val icon: String, val rules: List<Rule>)
     var binDraft by mutableStateOf<BinDraft?>(null)
+    /** House settings draft, for the same reason. */
+    var profileDraft by mutableStateOf<ProfileEntity?>(null)
 
     // --- wizard ---
     var wizard by mutableStateOf(WizardDraft())

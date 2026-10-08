@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -41,6 +42,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.RadioButton
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -202,14 +208,41 @@ fun SwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit, subt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SegmentedChoice(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
-    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-        options.forEachIndexed { i, label ->
-            SegmentedButton(
-                selected = i == selected,
-                onClick = { onSelect(i) },
-                shape = SegmentedButtonDefaults.itemShape(index = i, count = options.size),
-                modifier = Modifier.heightIn(min = 48.dp),
-            ) { Text(label, style = MaterialTheme.typography.labelLarge) }
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val style = MaterialTheme.typography.labelLarge
+        val measurer = rememberTextMeasurer()
+        val density = LocalDensity.current
+        // a segment must hold each label's longest word beside the check mark (padding 24 + icon 18 + gap 8 + border 2),
+        // or the word breaks mid-word; with large text the choices stack as radio rows instead
+        val segment = maxWidth / options.size
+        val fits = options.all { label ->
+            val word = label.split(' ').maxOf { measurer.measure(it, style).size.width }
+            with(density) { word.toDp() } + 52.dp <= segment
+        }
+        if (fits) {
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                options.forEachIndexed { i, label ->
+                    SegmentedButton(
+                        selected = i == selected,
+                        onClick = { onSelect(i) },
+                        shape = SegmentedButtonDefaults.itemShape(index = i, count = options.size),
+                        modifier = Modifier.heightIn(min = 48.dp),
+                    ) { Text(label, style = style) }
+                }
+            }
+        } else {
+            Column(Modifier.selectableGroup()) {
+                options.forEachIndexed { i, label ->
+                    Row(
+                        Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(MaterialTheme.shapes.medium)
+                            .selectable(selected = i == selected, role = Role.RadioButton, onClick = { onSelect(i) }),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = i == selected, onClick = null, modifier = Modifier.padding(horizontal = 12.dp))
+                        Text(label, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            }
         }
     }
 }
