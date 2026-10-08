@@ -1,0 +1,64 @@
+package io.github.lorenzolubrano.portafuori.ui
+
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.YearMonth
+
+class WordingTest {
+    private val wed = LocalDate.of(2026, 10, 7)
+
+    @Test fun fromTime() {
+        assertEquals("Dalle 20:00", Wording.from(LocalTime.of(20, 0)))
+        assertEquals("Dall'1:30", Wording.from(LocalTime.of(1, 30)))
+        assertEquals("Dalle 5:05", Wording.from(LocalTime.of(5, 5)))
+    }
+
+    @Test fun untilTime() {
+        assertEquals("al più tardi entro le 6:00 di giovedì", Wording.until(wed, wed.plusDays(1), LocalTime.of(6, 0)))
+        assertEquals("al più tardi entro le 23:00", Wording.until(wed, wed, LocalTime.of(23, 0)))
+        assertEquals("al più tardi entro l'1:00 di giovedì", Wording.until(wed, wed.plusDays(1), LocalTime.of(1, 0)))
+        assertEquals("al più tardi entro le 8:00 di venerdì 9 ottobre", Wording.until(wed, wed.plusDays(2), LocalTime.of(8, 0)))
+    }
+
+    @Test fun doneLabels() {
+        assertEquals("Fatto, l'ho portato fuori", Wording.doneButton(1))
+        assertEquals("Fatto, li ho portati fuori", Wording.doneButton(3))
+        assertEquals("Fatto: è fuori", Wording.doneState(1))
+        assertEquals("Fatto: sono fuori", Wording.doneState(2))
+        assertEquals("Stasera porta fuori", Wording.headline("Stasera"))
+    }
+
+    @Test fun ritiroAndEvening() {
+        assertEquals("ritiro gio 8", Wording.ritiro(LocalDate.of(2026, 10, 8)))
+        assertEquals("ritiro giovedì 8", Wording.ritiroLong(LocalDate.of(2026, 10, 8)))
+        assertEquals("Mercoledì 7 sera", Wording.eveningTitle(wed))
+    }
+
+    @Test fun weekTitles() {
+        assertEquals("Sere dal 5 all'11 ottobre", Wording.weekTitle(LocalDate.of(2026, 10, 5)))
+        assertEquals("Sere dall'1 al 7 giugno", Wording.weekTitle(LocalDate.of(2026, 6, 1)))
+        assertEquals("Sere dall'8 al 14 giugno", Wording.weekTitle(LocalDate.of(2026, 6, 8)))
+        assertEquals("Sere dal 28 settembre al 4 ottobre", Wording.weekTitle(LocalDate.of(2026, 9, 28)))
+        assertEquals("Sere dal 28 dicembre 2026 al 3 gennaio 2027", Wording.weekTitle(LocalDate.of(2026, 12, 28)))
+    }
+
+    @Test fun monthTitle() = assertEquals("Sere di ottobre 2026", Wording.monthTitle(YearMonth.of(2026, 10)))
+
+    @Test fun iconNames() {
+        val keys = listOf("compost", "bottle", "paper", "glass", "trash", "recycle", "grass", "baby", "bag", "box", "battery", "oil")
+        assertEquals(
+            listOf("Organico", "Bottiglia", "Carta", "Vetro", "Cestino", "Riciclo", "Erba", "Pannolino", "Sacchetto", "Scatola", "Pila", "Olio"),
+            keys.map(Wording::iconName),
+        )
+        assertEquals("Cestino", Wording.iconName("sconosciuta")) // same fallback as binIcon()
+    }
+
+    @Test fun colourNames() {
+        assertEquals("Giallo", Wording.colorName(0xFFF2C230))
+        assertEquals("Grigio chiaro", Wording.colorName(0xFFB0B7C3))
+        // an imported colour outside the palette gets the nearest name, never an empty label
+        assertEquals("Rosso", Wording.colorName(0xFFE04040))
+    }
+}
