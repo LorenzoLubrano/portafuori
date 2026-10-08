@@ -4,6 +4,16 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -215,22 +226,35 @@ private fun TonightStop(vm: MainViewModel, e: Evening, now: Long) {
         Text("È festivo (${e.holiday}): verifica che il ritiro si faccia.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.tertiary)
     }
     Spacer(Modifier.height(16.dp))
-    if (e.done) {
-        Row(Modifier.fillMaxWidth().heightIn(min = 60.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(32.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
-                Icon(Icons.Filled.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
+    AnimatedContent(
+        targetState = e.done,
+        transitionSpec = { (fadeIn(tween(180)) + scaleIn(initialScale = 0.96f, animationSpec = tween(220))) togetherWith fadeOut(tween(120)) },
+        label = "fatto",
+    ) { done ->
+        if (done) {
+            // the check lands with a small bounce when the evening gets done, not every time the screen opens
+            val check by transition.animateFloat(transitionSpec = { spring(dampingRatio = Spring.DampingRatioMediumBouncy) }, label = "spunta") {
+                if (it == EnterExitState.PreEnter) 0.6f else 1f
             }
-            Spacer(Modifier.width(12.dp))
-            Text(Wording.doneState(e.bins.size), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-            TextButton(onClick = { vm.undoDone(e.profileId, e.collectionDate) }, modifier = Modifier.heightIn(min = 48.dp)) {
-                Text("Annulla", style = MaterialTheme.typography.titleMedium)
+            Row(Modifier.fillMaxWidth().heightIn(min = 60.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier.size(32.dp).graphicsLayer { scaleX = check; scaleY = check }.clip(CircleShape).background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Filled.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
+                }
+                Spacer(Modifier.width(12.dp))
+                Text(Wording.doneState(e.bins.size), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                TextButton(onClick = { vm.undoDone(e.profileId, e.collectionDate) }, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text("Annulla", style = MaterialTheme.typography.titleMedium)
+                }
             }
-        }
-    } else {
-        Button(onClick = { vm.markDone(e.profileId, e.collectionDate) }, modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp)) {
-            Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(24.dp))
-            Spacer(Modifier.width(10.dp))
-            Text(Wording.doneButton(e.bins.size), style = MaterialTheme.typography.titleMedium)
+        } else {
+            Button(onClick = { vm.markDone(e.profileId, e.collectionDate) }, modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp)) {
+                Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(10.dp))
+                Text(Wording.doneButton(e.bins.size), style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
 }

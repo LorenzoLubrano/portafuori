@@ -1,5 +1,15 @@
 package io.github.lorenzolubrano.portafuori.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -98,31 +108,42 @@ fun CalendarScreen(vm: MainViewModel, state: UiState) {
     // the evening whose day sheet is open; every evening opens, even an empty one (extra collections)
     var open by remember { mutableStateOf<LocalDate?>(null) }
     val big = LocalDensity.current.fontScale > 1.3f
-    val nights = if (mode == 0) {
-        CalendarModel.nights(b, weekStart, weekStart.plusDays(6))
-    } else {
-        val gridStart = CalendarModel.weekStart(month.atDay(1))
-        CalendarModel.nights(b, gridStart, gridStart.plusDays(41))
+    val nights = remember(b, mode, weekStart, month) {
+        if (mode == 0) {
+            CalendarModel.nights(b, weekStart, weekStart.plusDays(6))
+        } else {
+            val gridStart = CalendarModel.weekStart(month.atDay(1))
+            CalendarModel.nights(b, gridStart, gridStart.plusDays(41))
+        }
     }
 
     Page(title = "Calendario", actions = { ProfileSwitcher(vm, state) }) {
         item { SegmentedChoice(listOf("Settimana", "Mese"), mode) { mode = it } }
-        if (mode == 0) {
-            item {
-                Pager(
-                    Wording.weekTitle(weekStart), "Settimana precedente", "Settimana successiva",
-                    { weekStart = weekStart.minusWeeks(1) }, { weekStart = weekStart.plusWeeks(1) },
-                )
+        item {
+            Crossfade(mode, animationSpec = tween(180), label = "vista") { m ->
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (m == 0) {
+                        Pager(
+                            Wording.weekTitle(weekStart), "Settimana precedente", "Settimana successiva",
+                            { weekStart = weekStart.minusWeeks(1) }, { weekStart = weekStart.plusWeeks(1) },
+                        )
+                        AnimatedContent(weekStart, transitionSpec = { slideByTime() }, label = "settimana") { ws ->
+                            val n = remember(b, ws) { CalendarModel.nights(b, ws, ws.plusDays(6)) }
+                            WeekLines(b, ws, today, n, big) { open = it }
+                        }
+                    } else {
+                        Pager(
+                            Wording.monthTitle(month), "Mese precedente", "Mese successivo",
+                            { month = month.minusMonths(1) }, { month = month.plusMonths(1) },
+                        )
+                        AnimatedContent(month, transitionSpec = { slideByTime() }, label = "mese") { ym ->
+                            val gridStart = CalendarModel.weekStart(ym.atDay(1))
+                            val n = remember(b, ym) { CalendarModel.nights(b, gridStart, gridStart.plusDays(41)) }
+                            MonthGrid(b, ym, gridStart, today, n) { open = it }
+                        }
+                    }
+                }
             }
-            item { WeekLines(b, weekStart, today, nights, big) { open = it } }
-        } else {
-            item {
-                Pager(
-                    Wording.monthTitle(month), "Mese precedente", "Mese successivo",
-                    { month = month.minusMonths(1) }, { month = month.plusMonths(1) },
-                )
-            }
-            item { MonthGrid(b, month, CalendarModel.weekStart(month.atDay(1)), today, nights) { open = it } }
         }
     }
 
@@ -130,6 +151,13 @@ fun CalendarScreen(vm: MainViewModel, state: UiState) {
         val date = nights[evening]?.calendarDate ?: CalendarModel.calendarDateOf(b, evening)
         DaySheet(vm, b, date, b.holidayCalendar.nameOf(date)) { open = null }
     }
+}
+
+/** Later weeks and months come in from the right, earlier ones from the left. */
+private fun <T : Comparable<T>> AnimatedContentTransitionScope<T>.slideByTime(): ContentTransform {
+    val dir = if (targetState > initialState) 1 else -1
+    return (slideInHorizontally(tween(250)) { it * dir / 4 } + fadeIn(tween(250))) togetherWith
+        (slideOutHorizontally(tween(200)) { -it * dir / 4 } + fadeOut(tween(150)))
 }
 
 @Composable
