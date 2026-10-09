@@ -2,7 +2,6 @@ package io.github.lorenzolubrano.portafuori.data
 
 import io.github.lorenzolubrano.portafuori.rules.BinRules
 import io.github.lorenzolubrano.portafuori.rules.DateException
-import io.github.lorenzolubrano.portafuori.rules.ExposureMode
 import io.github.lorenzolubrano.portafuori.rules.ExposureWindow
 import io.github.lorenzolubrano.portafuori.rules.HolidayCalendar
 import io.github.lorenzolubrano.portafuori.rules.LocalHoliday
@@ -116,8 +115,9 @@ data class ProfileBundle(
     /** The evening (or morning) a collection's bins go out: the app's one clock. */
     fun eveningOf(collection: LocalDate): LocalDate = Schedule.exposureWindow(rules, collection).start.toLocalDate()
 
-    /** Bins go out the same morning: the app's "evenings" are mornings. */
-    val morning: Boolean get() = rules.exposureMode == ExposureMode.SAME_MORNING
+    /** Bins go out before noon: the app's "evenings" are mornings. The time decides, as the same-morning setting
+     *  with evening times still puts them out the evening before. */
+    val morning: Boolean get() = rules.exposeStart.hour < 12
 
     fun occurrences(from: LocalDate, to: LocalDate): List<Occurrence> = Schedule.compute(
         rules,

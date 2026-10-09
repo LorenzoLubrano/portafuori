@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android style: from Android 14 the system names the wallpaper background the app itself draws -->
+    <color name="splash_android_light">@android:color/system_background_light</color>
+    <color name="splash_android_dark">@android:color/system_background_dark</color>
+</resources>

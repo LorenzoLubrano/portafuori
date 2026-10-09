@@ -73,6 +73,16 @@ class StyleActivitiesTest {
         assertEquals(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP, StyleActivities.forwardFlags(null, 0))
     }
 
+    @Test fun backLeavesTheOtherStylesInTheBackgroundLikeLinee() {
+        // Android does this by itself only for the launcher's activity (Linee): the others would be closed,
+        // and the next opening would start from scratch, with Linee's colours below Android 13
+        assertTrue(StyleActivities.backKeepsInBackground(MainActivityOriginale::class.java, taskRoot = true))
+        assertTrue(StyleActivities.backKeepsInBackground(MainActivityAndroid::class.java, taskRoot = true))
+        assertFalse(StyleActivities.backKeepsInBackground(MainActivity::class.java, taskRoot = true))
+        // opened on top of another app (a file from a chat): Back goes back to that app
+        assertFalse(StyleActivities.backKeepsInBackground(MainActivityOriginale::class.java, taskRoot = false))
+    }
+
     @Test fun eachActivityHandsTheTaskOverToTheNextStyle() {
         // The task's identity must follow the activity that replaced it: otherwise a task started by a share
         // drops an identical share as "already open", and after a change of style an intent without the

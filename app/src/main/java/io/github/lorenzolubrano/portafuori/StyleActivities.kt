@@ -32,6 +32,13 @@ object StyleActivities {
      * opened from our own share. The app's own ways in (launcher, widget, notification) come back to the activity
      * already there. A shared file stays readable either way.
      */
+    /**
+     * Whether Back, with nothing left to go back to in the app, sends the app to the background instead of closing it.
+     * Android does it by itself only for the launcher's activity (Linee's); the other styles' activities would be
+     * closed and reopen from scratch. Not when the app was opened on top of another one: Back returns there.
+     */
+    fun backKeepsInBackground(current: Class<*>, taskRoot: Boolean): Boolean = current != MainActivity::class.java && taskRoot
+
     fun forwardFlags(action: String?, launchFlags: Int): Int {
         val read = launchFlags and Intent.FLAG_GRANT_READ_URI_PERMISSION
         val fromAnotherApp = action == Intent.ACTION_SEND || action == Intent.ACTION_VIEW

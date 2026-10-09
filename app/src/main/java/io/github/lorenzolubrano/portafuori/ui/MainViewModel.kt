@@ -141,6 +141,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun open(s: Screen) { stack.add(s) }
     fun switchTab(s: Screen) { clearStack(); tab = s }
+
+    /** After a change of style the app reopens on Altro: the style choice comes back into view. */
+    var showStyle by mutableStateOf(false)
     fun back(): Boolean = if (stack.isNotEmpty()) { stack.removeAt(stack.lastIndex); true } else if (tab != Screen.Today) { tab = Screen.Today; true } else false
 
     var message by mutableStateOf<String?>(null)

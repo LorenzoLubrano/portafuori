@@ -1,5 +1,6 @@
 package io.github.lorenzolubrano.portafuori.ui
 
+import io.github.lorenzolubrano.portafuori.data.Presets
 import io.github.lorenzolubrano.portafuori.rules.It
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -71,6 +72,11 @@ class WordingTest {
             keys.map(Wording::iconName),
         )
         assertEquals("Cestino", Wording.iconName("sconosciuta")) // same fallback as binIcon()
+    }
+
+    /** Every colour of the editor's palette has its own name, whatever the palette becomes. */
+    @Test fun everyPaletteColourHasItsOwnName() {
+        assertEquals(Presets.colors.size, Presets.colors.map { Wording.colorName(it) }.toSet().size)
     }
 
     @Test fun colourNames() {

@@ -82,6 +82,16 @@ class CalendarModelTest {
         assertEquals(setOf(LocalDate.of(2026, 10, 5), LocalDate.of(2026, 10, 8)), nights.keys)
     }
 
+    /** The day is called a morning when the bins really go out in the morning, not by the setting alone. */
+    @Test fun aMorningIsWhenTheBinsGoOutBeforeNoon() {
+        assertEquals(false, bundle().morning)
+        val early = ProfileEntity(id = 1, name = "Casa", exposureMode = ExposureMode.SAME_MORNING, exposeStart = LocalTime.of(5, 0), exposeEnd = LocalTime.of(8, 0))
+        assertEquals(true, bundle(profile = early).morning)
+        // «the same morning» with the evening's times still puts them out the evening before
+        val late = ProfileEntity(id = 1, name = "Casa", exposureMode = ExposureMode.SAME_MORNING, exposeStart = LocalTime.of(20, 0), exposeEnd = LocalTime.of(6, 0))
+        assertEquals(false, bundle(profile = late).morning)
+    }
+
     /** Review Focus 4: seven bins on one evening show three roundels and "+4". */
     @Test fun manyBinsSameEvening() {
         val seven = (1L..7L).map { bin(it, "Bidone $it", THURSDAY) }

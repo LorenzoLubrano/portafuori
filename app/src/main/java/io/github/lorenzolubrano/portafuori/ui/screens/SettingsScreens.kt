@@ -35,7 +35,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,10 +78,20 @@ import io.github.lorenzolubrano.portafuori.ui.theme.okColor
 import io.github.lorenzolubrano.portafuori.ui.dial
 import io.github.lorenzolubrano.portafuori.ui.openLink
 
+/** The «Stile» title in Altro's list: the menu group comes first. */
+private const val STYLE_TITLE = 1
+
 @Composable
 fun MoreScreen(vm: MainViewModel, state: UiState) {
     val rel = vm.reliability
-    Page(title = "Altro", actions = { ProfileSwitcher(vm, state) }) {
+    val list = rememberLazyListState()
+    LaunchedEffect(vm.showStyle) {
+        if (vm.showStyle) {
+            list.scrollToItem(STYLE_TITLE)
+            vm.showStyle = false
+        }
+    }
+    Page(title = "Altro", actions = { ProfileSwitcher(vm, state) }, state = list) {
         item {
             RowGroup {
                 MenuRow(

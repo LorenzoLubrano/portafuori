@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -83,6 +84,20 @@ open class MainActivity : ComponentActivity() {
         enableEdgeToEdge(statusBarStyle, navigationBarStyle)
         applyWindowBackground(cachedTheme, cachedStyle)
         super.onCreate(savedInstanceState)
+        // Linee's activity keeps the system's own Back (and its animation home). Registered before the content,
+        // so the app's own Back handling always comes first.
+        if (javaClass != MainActivity::class.java) {
+            onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (StyleActivities.backKeepsInBackground(javaClass, isTaskRoot)) {
+                        moveTaskToBack(true)
+                    } else {
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                    }
+                }
+            })
+        }
         splash.setKeepOnScreenCondition { !vm.state.value.loaded }
         if (savedInstanceState == null) handleIntent(intent)
         setContent {
@@ -131,9 +146,9 @@ open class MainActivity : ComponentActivity() {
             )
         }
         if (StyleActivities.reopens(javaClass, style, finishing = isFinishing)) {
-            // A new style lives in its own activity: reopen there, on the same tab
+            // A new style lives in its own activity: reopen there, on the same tab, with the choice in view
             val next = Intent(this, StyleActivities.of(style))
-            if (vm.tab == Screen.More) next.putExtra(Notifications.EXTRA_OPEN, "more")
+            if (vm.tab == Screen.More) next.putExtra(Notifications.EXTRA_OPEN, "style")
             startActivity(next, ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle())
             finish()
         }
@@ -190,6 +205,7 @@ open class MainActivity : ComponentActivity() {
             "holidays" -> vm.open(Screen.Holidays)
             "today" -> vm.switchTab(Screen.Today)
             "more" -> vm.switchTab(Screen.More)
+            "style" -> { vm.switchTab(Screen.More); vm.showStyle = true }
         }
     }
 }

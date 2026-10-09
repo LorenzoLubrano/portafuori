@@ -1,6 +1,7 @@
 package io.github.lorenzolubrano.portafuori.ui
 
 import io.github.lorenzolubrano.portafuori.data.Evening
+import io.github.lorenzolubrano.portafuori.data.Presets
 import io.github.lorenzolubrano.portafuori.rules.It
 import java.time.LocalDate
 import java.time.LocalTime
@@ -66,11 +67,10 @@ object Wording {
         else -> "Cestino"
     }
 
-    private val colourNames = listOf(
-        0xFF8D5B3A to "Marrone", 0xFFF2C230 to "Giallo", 0xFF2F6FD6 to "Blu", 0xFF2E9E5B to "Verde",
-        0xFF6B7280 to "Grigio", 0xFF1FA2C7 to "Azzurro", 0xFF6E8B3D to "Verde oliva", 0xFF8E6CC1 to "Viola",
-        0xFFD64545 to "Rosso", 0xFFE67E22 to "Arancione", 0xFF222222 to "Nero", 0xFFB0B7C3 to "Grigio chiaro",
-    )
+    // the editor's palette, in its order: one list of colours, here only their names
+    private val colourNames = Presets.colors.zip(
+        listOf("Marrone", "Giallo", "Blu", "Verde", "Grigio", "Azzurro", "Verde oliva", "Viola", "Rosso", "Arancione", "Nero", "Grigio chiaro"),
+    ).also { check(it.size == Presets.colors.size) }
 
     /** Name of the nearest palette colour: imported bins may carry any colour, TalkBack still needs a word. */
     fun colorName(argb: Long): String {
