@@ -15,6 +15,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -66,6 +67,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -189,6 +191,20 @@ private fun WeekLines(b: ProfileBundle, start: LocalDate, today: LocalDate, nigh
     val days = (0..6).map { start.plusDays(it.toLong()) }
     val colW = 30.dp
     Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLowest, contentColor = MaterialTheme.colorScheme.onSurface) {
+      Box {
+        // each evening is a whole column to tap, tonight's faintly lit; TalkBack keeps using the headers
+        if (!big) {
+            Row(Modifier.matchParentSize().padding(10.dp)) {
+                Spacer(Modifier.weight(1f))
+                days.forEach { d ->
+                    Box(
+                        Modifier.width(colW + 4.dp).fillMaxHeight().clip(MaterialTheme.shapes.small)
+                            .background(if (d == today) MaterialTheme.colorScheme.primary.copy(alpha = 0.07f) else Color.Transparent)
+                            .clickable { onOpen(d) }.clearAndSetSemantics {},
+                    )
+                }
+            }
+        }
         Column(Modifier.padding(10.dp)) {
             // header: one column per evening, tonight highlighted, each column opens its evening
             Row(verticalAlignment = Alignment.Bottom) {
@@ -219,6 +235,7 @@ private fun WeekLines(b: ProfileBundle, start: LocalDate, today: LocalDate, nigh
                 BinLine(bin, stops, big, colW, b.morning)
             }
         }
+      }
     }
 }
 
@@ -261,14 +278,12 @@ private fun BinLine(bin: Bin, stops: List<Stop>, big: Boolean, colW: Dp, morning
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) { label() }
                 Box {
-                    // the line between the first and the last stop, drawn under the stops
-                    val first = stops.indexOfFirst { it == Stop.OUT }
-                    val last = stops.indexOfLast { it == Stop.OUT }
-                    if (first >= 0 && last > first) {
+                    // the line runs through the whole week, drawn under the stops; it stops only on its evenings
+                    if (!none) {
                         Box(
-                            Modifier.padding(start = (colW + 4.dp) * first + (colW + 4.dp) / 2).width((colW + 4.dp) * (last - first)).height(6.dp)
-                                .align(Alignment.CenterStart).clip(CircleShape).background(c)
-                                .then(if (edge != null) Modifier.border(1.dp, edge, CircleShape) else Modifier),
+                            Modifier.padding(start = (colW + 4.dp) / 2).width((colW + 4.dp) * 6).height(4.dp)
+                                .align(Alignment.CenterStart).clip(CircleShape).background(c.copy(alpha = 0.45f))
+                                .then(if (edge != null) Modifier.border(1.dp, edge.copy(alpha = 0.5f), CircleShape) else Modifier),
                         )
                     }
                     Row(content = stopsRow)
