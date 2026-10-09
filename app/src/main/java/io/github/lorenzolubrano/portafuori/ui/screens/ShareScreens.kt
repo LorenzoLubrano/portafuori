@@ -68,6 +68,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -301,6 +302,9 @@ fun ScanScreen(vm: MainViewModel) {
     }
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted = it }
     val found = remember { AtomicBoolean(false) }
+    // the frames are read off the main thread; the thread ends with the screen
+    val analyzer = remember { Executors.newSingleThreadExecutor() }
+    DisposableEffect(analyzer) { onDispose { analyzer.shutdown() } }
 
     Page(title = "Scansiona il QR", onBack = { vm.back() }) {
         item { Text("Inquadra il QR mostrato dal vicino.", style = MaterialTheme.typography.bodyLarge) }
@@ -325,7 +329,7 @@ fun ScanScreen(vm: MainViewModel) {
                                 val provider = providerFuture.get()
                                 val preview = Preview.Builder().build().also { it.setSurfaceProvider(view.surfaceProvider) }
                                 val analysis = ImageAnalysis.Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
-                                analysis.setAnalyzer(Executors.newSingleThreadExecutor()) { image ->
+                                analysis.setAnalyzer(analyzer) { image ->
                                     try {
                                         if (!found.get()) {
                                             val plane = image.planes[0]
@@ -369,6 +373,9 @@ fun ImportPreviewScreen(vm: MainViewModel, state: UiState) {
         LaunchedEffect(Unit) { vm.message = "Questo calendario non è valido."; vm.cancelImport() }
         return
     }
+    // replacing drops data that cannot come back: one more question first
+    var replaceId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var replaceAll by rememberSaveable { mutableStateOf(false) }
     Page(title = if (isBackup) "Ripristina backup" else "Importa calendario", onBack = { vm.cancelImport() }) {
         item {
             Text(
@@ -437,7 +444,7 @@ fun ImportPreviewScreen(vm: MainViewModel, state: UiState) {
         val enabled = !vm.importing
         if (isBackup) {
             if (state.bundles.isNotEmpty()) {
-                item { Button(enabled = enabled, onClick = { vm.confirmImport(null, replaceAll = true) }, modifier = Modifier.fillMaxWidth()) { Text("Sostituisci tutto con il backup") } }
+                item { Button(enabled = enabled, onClick = { replaceAll = true }, modifier = Modifier.fillMaxWidth()) { Text("Sostituisci tutto con il backup") } }
                 item { OutlinedButton(enabled = enabled, onClick = { vm.confirmImport(null, replaceAll = false) }, modifier = Modifier.fillMaxWidth()) { Text("Aggiungi alle case attuali") } }
             } else {
                 item { Button(enabled = enabled, onClick = { vm.confirmImport(null, replaceAll = false) }, modifier = Modifier.fillMaxWidth()) { Text("Ripristina") } }
@@ -451,7 +458,7 @@ fun ImportPreviewScreen(vm: MainViewModel, state: UiState) {
             // Replacing needs a house to replace: with none, neither the buttons nor their note make sense
             if (previews.size == 1 && state.bundles.isNotEmpty()) {
                 items(state.bundles, key = { it.profile.id }) { b ->
-                    OutlinedButton(enabled = enabled, onClick = { vm.confirmImport(b.profile.id, replaceAll = false) }, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(enabled = enabled, onClick = { replaceId = b.profile.id }, modifier = Modifier.fillMaxWidth()) {
                         Text("Sostituisci il calendario di «${b.profile.name}»")
                     }
                 }
@@ -469,5 +476,23 @@ fun ImportPreviewScreen(vm: MainViewModel, state: UiState) {
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+    }
+    state.bundles.firstOrNull { it.profile.id == replaceId }?.let { b ->
+        AlertDialog(
+            onDismissRequest = { replaceId = null },
+            title = { Text("Sostituire il calendario di «${b.profile.name}»?") },
+            text = { Text("Bidoni e giorni di adesso saranno sostituiti da quelli del file. Non si può annullare.") },
+            confirmButton = { TextButton(onClick = { replaceId = null; vm.confirmImport(b.profile.id, replaceAll = false) }) { Text("Sostituisci") } },
+            dismissButton = { TextButton(onClick = { replaceId = null }) { Text("Annulla") } },
+        )
+    }
+    if (replaceAll) {
+        AlertDialog(
+            onDismissRequest = { replaceAll = false },
+            title = { Text("Sostituire tutto con il backup?") },
+            text = { Text("Le case di adesso saranno sostituite da quelle del backup. Non si può annullare.") },
+            confirmButton = { TextButton(onClick = { replaceAll = false; vm.confirmImport(null, replaceAll = true) }) { Text("Sostituisci") } },
+            dismissButton = { TextButton(onClick = { replaceAll = false }) { Text("Annulla") } },
+        )
     }
 }

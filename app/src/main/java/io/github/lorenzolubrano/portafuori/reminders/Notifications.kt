@@ -15,7 +15,7 @@ import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import io.github.lorenzolubrano.portafuori.MainActivity
+import io.github.lorenzolubrano.portafuori.StyleActivities
 import io.github.lorenzolubrano.portafuori.R
 import io.github.lorenzolubrano.portafuori.data.StylePrefs
 
@@ -65,7 +65,8 @@ object Notifications {
     fun post(context: Context, s: Slot, late: Boolean): Boolean {
         val channel = channelFor(s.kind)
         if (!canPost(context, channel)) return false
-        val open = Intent(context, MainActivity::class.java).apply {
+        // straight to the style's activity; one opened in an older style moves on by itself
+        val open = Intent(context, StyleActivities.of(StylePrefs.cached(context))).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra(EXTRA_OPEN, if (s.kind == SlotKind.HOLIDAY_ASK) "holidays" else "today")
         }

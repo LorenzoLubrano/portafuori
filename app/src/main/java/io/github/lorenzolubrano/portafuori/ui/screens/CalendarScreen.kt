@@ -118,14 +118,6 @@ fun CalendarScreen(vm: MainViewModel, state: UiState) {
     // the evening whose day sheet is open; every evening opens, even an empty one (extra collections)
     var open by rememberSaveable { mutableStateOf<LocalDate?>(null) }
     val big = LocalDensity.current.fontScale > 1.3f
-    val nights = remember(b, mode, weekStart, month) {
-        if (mode == 0) {
-            CalendarModel.nights(b, weekStart, weekStart.plusDays(6))
-        } else {
-            val gridStart = CalendarModel.weekStart(month.atDay(1))
-            CalendarModel.nights(b, gridStart, gridStart.plusDays(41))
-        }
-    }
 
     Page(title = "Calendario", actions = { ProfileSwitcher(vm, state) }) {
         item { SegmentedChoice(listOf("Settimana", "Mese"), mode) { mode = it } }
@@ -158,7 +150,7 @@ fun CalendarScreen(vm: MainViewModel, state: UiState) {
     }
 
     open?.let { evening ->
-        val date = nights[evening]?.calendarDate ?: CalendarModel.calendarDateOf(b, evening)
+        val date = remember(b, evening) { CalendarModel.nights(b, evening, evening)[evening]?.calendarDate ?: CalendarModel.calendarDateOf(b, evening) }
         DaySheet(vm, b, date, b.holidayCalendar.nameOf(date)) { open = null }
     }
 }

@@ -8,6 +8,7 @@ import io.github.lorenzolubrano.portafuori.data.ProfileEntity
 import io.github.lorenzolubrano.portafuori.rules.CalendarMode
 import io.github.lorenzolubrano.portafuori.rules.ExceptionKind
 import io.github.lorenzolubrano.portafuori.rules.ExposureMode
+import io.github.lorenzolubrano.portafuori.rules.HolidayPolicy
 import io.github.lorenzolubrano.portafuori.rules.Rule
 import io.github.lorenzolubrano.portafuori.rules.RuleType
 import org.junit.Assert.assertEquals
@@ -50,6 +51,28 @@ class CalendarModelTest {
         assertEquals(Stop.SKIPPED, wed.stopOf(2))
         assertEquals(Stop.OUT, wed.stopOf(1))
         assertEquals(listOf(1L), wed.activeBinIds)
+    }
+
+    /** A moved collection leaves its old evening (shown there as not going out) and goes out on the new one. */
+    @Test fun movedCollectionGoesOutOnItsNewEvening() {
+        val move = ExceptionEntity(profileId = 1, binId = 2, kind = ExceptionKind.MOVE, date = LocalDate.of(2026, 10, 8), target = LocalDate.of(2026, 10, 9))
+        val nights = CalendarModel.nights(bundle(exceptions = listOf(move)), mon5, mon5.plusDays(6))
+        assertEquals(Stop.SKIPPED, nights.getValue(LocalDate.of(2026, 10, 7)).stopOf(2))
+        assertEquals(Stop.OUT, nights.getValue(LocalDate.of(2026, 10, 7)).stopOf(1))
+        assertEquals(Stop.OUT, nights.getValue(LocalDate.of(2026, 10, 8)).stopOf(2))
+    }
+
+    /** A collection on a public holiday waits for an answer (the default), or is left out when the house skips them. */
+    @Test fun holidayCollectionWaitsOrIsLeftOut() {
+        // Thursday 1 January 2026 is a public holiday: it goes out on Wednesday 31 December
+        val newYearsEve = LocalDate.of(2025, 12, 31)
+        val asking = CalendarModel.nights(bundle(), LocalDate.of(2025, 12, 29), LocalDate.of(2026, 1, 4)).getValue(newYearsEve)
+        assertEquals(Stop.PENDING, asking.stopOf(2))
+        assertEquals(listOf(1L, 2L), asking.activeBinIds)
+        val skipping = ProfileEntity(id = 1, name = "Casa", holidayPolicy = HolidayPolicy.SKIP)
+        val skipped = CalendarModel.nights(bundle(profile = skipping), LocalDate.of(2025, 12, 29), LocalDate.of(2026, 1, 4)).getValue(newYearsEve)
+        assertEquals(Stop.SKIPPED, skipped.stopOf(2))
+        assertEquals(emptyList<Long>(), skipped.activeBinIds)
     }
 
     /** Review Focus 5: in morning mode the "evening" is the collection morning itself. */

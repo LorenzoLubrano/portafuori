@@ -63,6 +63,7 @@
 
     <ImageView
         android:id="@+id/widget_roundels"
+        android:importantForAccessibility="no"
         tools:ignore="ContentDescription"
         android:layout_width="wrap_content"
         android:layout_height="32dp"

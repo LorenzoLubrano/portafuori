@@ -151,12 +151,14 @@ fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
         vm.profileDraft = null
         vm.back()
     }
-    // system back asks before dropping unsaved edits, like the bin editor; the arrow and «Salva» save
-    BackHandler { if (dirty) confirmExit = true else leave(save = false) }
+    // the arrow and system back give the same result: they ask before dropping unsaved edits, like the bin editor;
+    // «Salva» saves
+    fun exit() { if (dirty) confirmExit = true else leave(save = false) }
+    BackHandler(onBack = ::exit)
 
     Page(
         title = "Impostazioni",
-        onBack = { leave(save = true) },
+        onBack = ::exit,
         actions = { ShellAction("Salva", enabled = dirty) { leave(save = true) } },
     ) {
         item {

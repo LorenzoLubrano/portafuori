@@ -17,7 +17,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
-import io.github.lorenzolubrano.portafuori.MainActivity
+import io.github.lorenzolubrano.portafuori.StyleActivities
 import io.github.lorenzolubrano.portafuori.R
 import io.github.lorenzolubrano.portafuori.data.Bin
 import io.github.lorenzolubrano.portafuori.data.Evening
@@ -70,7 +70,7 @@ class TonightWidget : AppWidgetProvider() {
             val style = StylePrefs.cached(context)
             val v = RemoteViews(context.packageName, WidgetStyle.layout(style, compact))
             val open = PendingIntent.getActivity(
-                context, 0, Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                context, 0, Intent(context, StyleActivities.of(style)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
             v.setOnClickPendingIntent(R.id.widget_root, open)
@@ -107,7 +107,6 @@ class TonightWidget : AppWidgetProvider() {
                         // before Android 12 the app's resources follow the phone, like the launcher
                         v.setImageViewBitmap(R.id.widget_roundels, roundels(context, e.bins, style, ContextCompat.getColor(context, WidgetStyle.mutedColor(style))))
                     }
-                    v.setContentDescription(R.id.widget_roundels, e.binNames)
                     v.setViewVisibility(R.id.widget_roundels, View.VISIBLE)
                     v.setTextViewText(R.id.widget_bins, names(e))
                     v.setTextViewText(R.id.widget_sub, Planner.windowText(e))

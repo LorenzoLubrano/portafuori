@@ -38,4 +38,17 @@ class WidgetStyleTest {
             assertEquals("$style notte", night.getValue(name), hex(n))
         }
     }
+
+    /** TalkBack reads the bins once, in the line of names: the roundels beside it are a picture of the same thing. */
+    @Test fun theRoundelsAreNotReadTwice() {
+        val ns = "http://schemas.android.com/apk/res/android"
+        val factory = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }
+        val layouts = File("src/main/res/layout").listFiles { f -> f.name.startsWith("widget_tonight") }!!
+        assertEquals(6, layouts.size)
+        for (f in layouts) {
+            val views = factory.newDocumentBuilder().parse(f).getElementsByTagName("ImageView")
+            val roundels = (0 until views.length).map { views.item(it) as Element }.single { it.getAttributeNS(ns, "id") == "@+id/widget_roundels" }
+            assertEquals(f.name, "no", roundels.getAttributeNS(ns, "importantForAccessibility"))
+        }
+    }
 }

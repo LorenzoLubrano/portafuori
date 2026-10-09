@@ -4,7 +4,7 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">@color/splash_bg</item>
     </style>
-    <!-- splash_bg is night-qualified: from Android 12 the app's own night mode (MainActivity.rememberTheme)
+    <!-- splash_bg is night-qualified: from Android 12 the app's own night mode (MainActivity.rememberLook)
          decides which one the system uses for the splash and the starting windows -->
     <style name="Theme.App.Starting" parent="Theme.SplashScreen.IconBackground">
         <item name="windowSplashScreenBackground">@color/splash_bg</item>
