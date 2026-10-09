@@ -17,6 +17,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import io.github.lorenzolubrano.portafuori.MainActivity
 import io.github.lorenzolubrano.portafuori.R
+import io.github.lorenzolubrano.portafuori.data.StylePrefs
 
 object Notifications {
     const val CH_EXPOSE = "esponi"
@@ -71,7 +72,7 @@ object Notifications {
         val text = if (late && s.kind != SlotKind.TEST) "In ritardo. ${s.text}" else s.text
         val b = NotificationCompat.Builder(context, channel)
             .setSmallIcon(R.drawable.ic_notification)
-            .setColor(0xFF0E1A33.toInt())
+            .setColor(accentFor(StylePrefs.cached(context), if (Build.VERSION.SDK_INT >= 31) context.getColor(android.R.color.system_accent1_600) else null))
             .setContentTitle(s.title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))

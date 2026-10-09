@@ -3,4 +3,9 @@
 <resources>
     <color name="splash_android_light">@android:color/system_neutral1_10</color>
     <color name="splash_android_dark">@android:color/system_neutral1_900</color>
+    <color name="widget_android_bg">@android:color/system_neutral1_10</color>
+    <color name="widget_android_text">@android:color/system_neutral1_900</color>
+    <color name="widget_android_text_muted">@android:color/system_neutral2_700</color>
+    <color name="widget_android_accent">@android:color/system_accent1_600</color>
+    <color name="widget_android_on_accent">@android:color/system_accent1_0</color>
 </resources>

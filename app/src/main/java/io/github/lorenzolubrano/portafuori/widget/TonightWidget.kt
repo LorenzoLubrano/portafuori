@@ -19,6 +19,8 @@ import io.github.lorenzolubrano.portafuori.R
 import io.github.lorenzolubrano.portafuori.data.Bin
 import io.github.lorenzolubrano.portafuori.data.Evening
 import io.github.lorenzolubrano.portafuori.data.ProfileBundle
+import io.github.lorenzolubrano.portafuori.data.StyleId
+import io.github.lorenzolubrano.portafuori.data.StylePrefs
 import io.github.lorenzolubrano.portafuori.reminders.ActionReceiver
 import io.github.lorenzolubrano.portafuori.reminders.Engine
 import io.github.lorenzolubrano.portafuori.reminders.Planner
@@ -62,7 +64,8 @@ class TonightWidget : AppWidgetProvider() {
             manager.getAppWidgetOptions(id).getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0) in 1 until 150
 
         private fun build(context: Context, bundle: ProfileBundle?, compact: Boolean): RemoteViews {
-            val v = RemoteViews(context.packageName, if (compact) R.layout.widget_tonight_compact else R.layout.widget_tonight)
+            val style = StylePrefs.cached(context)
+            val v = RemoteViews(context.packageName, WidgetStyle.layout(style, compact))
             val open = PendingIntent.getActivity(
                 context, 0, Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
@@ -89,7 +92,7 @@ class TonightWidget : AppWidgetProvider() {
                 }
                 isTonight(e, now) -> {
                     v.setTextViewText(R.id.widget_title, Planner.label(e, now))
-                    v.setImageViewBitmap(R.id.widget_roundels, roundels(context, e.bins))
+                    v.setImageViewBitmap(R.id.widget_roundels, roundels(context, e.bins, style))
                     v.setContentDescription(R.id.widget_roundels, e.binNames)
                     v.setViewVisibility(R.id.widget_roundels, View.VISIBLE)
                     v.setTextViewText(R.id.widget_bins, names(e))
@@ -126,7 +129,7 @@ class TonightWidget : AppWidgetProvider() {
         private const val MAX_ROUNDELS = 6
 
         /** Tonight's bins as Linee roundels: colour + icon, a dark edge on pale colours, at most [MAX_ROUNDELS]. */
-        private fun roundels(context: Context, bins: List<Bin>): Bitmap {
+        private fun roundels(context: Context, bins: List<Bin>, style: StyleId): Bitmap {
             val d = context.resources.displayMetrics.density
             val shown = bins.take(MAX_ROUNDELS)
             val size = (28 * d).toInt()
@@ -135,8 +138,7 @@ class TonightWidget : AppWidgetProvider() {
             val bmp = Bitmap.createBitmap(maxOf(1, shown.size * size + (shown.size - 1).coerceAtLeast(0) * gap), height, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bmp)
             val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            val bg = ContextCompat.getColor(context, R.color.widget_bg).toLong() and 0xFFFFFFFFL
-            val edge = ContextCompat.getColor(context, R.color.widget_text_muted)
+            val edge = ContextCompat.getColor(context, WidgetStyle.mutedColor(style))
             val top = (height - size) / 2f
             shown.forEachIndexed { i, bin ->
                 val color = bin.entity.colorArgb
@@ -145,7 +147,7 @@ class TonightWidget : AppWidgetProvider() {
                 paint.style = Paint.Style.FILL
                 paint.color = color.toInt()
                 canvas.drawCircle(left + r, top + r, r, paint)
-                if (Contrast.needsEdge(color, bg)) {
+                if (WidgetStyle.needsEdge(color, style)) {
                     paint.style = Paint.Style.STROKE
                     paint.strokeWidth = 1.5f * d
                     paint.color = edge

@@ -7,4 +7,14 @@
     <color name="widget_text_muted">#A9B4CA</color>
     <color name="widget_accent">#EEF2F9</color>
     <color name="widget_on_accent">#0B1630</color>
+    <color name="widget_originale_bg">#1B2420</color>
+    <color name="widget_originale_text">#EEF2EF</color>
+    <color name="widget_originale_text_muted">#A9B4AE</color>
+    <color name="widget_originale_accent">#7FD1B0</color>
+    <color name="widget_originale_on_accent">#0B2A1F</color>
+    <color name="widget_android_bg">#1E1F25</color>
+    <color name="widget_android_text">#E2E2E9</color>
+    <color name="widget_android_text_muted">#C4C6D0</color>
+    <color name="widget_android_accent">#ADC6FF</color>
+    <color name="widget_android_on_accent">#002E69</color>
 </resources>

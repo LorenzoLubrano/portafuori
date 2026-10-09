@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One row high: the roundels sit beside the title, the names under it, no window line. Same ids as widget_tonight. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_originale_bg"
+    android:orientation="vertical"
+    android:gravity="center_vertical"
+    android:paddingStart="14dp"
+    android:paddingEnd="8dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:textColor="@color/widget_originale_text"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <ImageView
+            android:id="@+id/widget_roundels"
+        tools:ignore="ContentDescription"
+            android:layout_width="0dp"
+            android:layout_height="24dp"
+            android:layout_weight="1"
+            android:adjustViewBounds="true"
+            android:scaleType="fitStart"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/widget_done"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:minWidth="64dp"
+            android:gravity="center"
+            android:background="@drawable/widget_originale_button"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="@string/widget_done"
+            android:textColor="@color/widget_originale_on_accent"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+        <TextView
+            android:id="@+id/widget_done_state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:gravity="center_vertical"
+            android:drawableStart="@drawable/ic_widget_check_originale"
+            android:drawablePadding="4dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="@string/widget_exposed"
+            android:textColor="@color/widget_originale_text"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_bins"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/widget_originale_text"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:maxLines="2"
+        android:ellipsize="end" />
+
+    <!-- shown only when there are no roundels (nothing tonight, not configured): one muted line -->
+    <TextView
+        android:id="@+id/widget_sub"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/widget_originale_text_muted"
+        android:textSize="14sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:visibility="gone" />
+</LinearLayout>
