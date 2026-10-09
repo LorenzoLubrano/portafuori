@@ -1,5 +1,7 @@
 <resources>
     <color name="splash_bg">@color/splash_dark</color>
+    <color name="splash_originale_bg">@color/splash_originale_dark</color>
+    <color name="splash_android_bg">@color/splash_android_dark</color>
     <color name="widget_bg">#0B1630</color>
     <color name="widget_text">#EEF2F9</color>
     <color name="widget_text_muted">#A9B4CA</color>

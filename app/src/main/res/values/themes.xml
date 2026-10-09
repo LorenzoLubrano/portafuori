@@ -12,4 +12,10 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_fg</item>
         <item name="postSplashScreenTheme">@style/Theme.App</item>
     </style>
+    <style name="Theme.App.Starting.Originale">
+        <item name="windowSplashScreenBackground">@color/splash_originale_bg</item>
+    </style>
+    <style name="Theme.App.Starting.Android">
+        <item name="windowSplashScreenBackground">@color/splash_android_bg</item>
+    </style>
 </resources>

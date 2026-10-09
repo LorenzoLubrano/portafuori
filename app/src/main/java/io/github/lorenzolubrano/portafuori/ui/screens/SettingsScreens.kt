@@ -50,6 +50,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.lorenzolubrano.portafuori.BuildConfig
 import io.github.lorenzolubrano.portafuori.data.ProfileEntity
+import io.github.lorenzolubrano.portafuori.data.StyleId
 import io.github.lorenzolubrano.portafuori.data.ThemeMode
 import io.github.lorenzolubrano.portafuori.rules.CalendarMode
 import io.github.lorenzolubrano.portafuori.rules.ExposureMode
@@ -94,6 +95,11 @@ fun MoreScreen(vm: MainViewModel, state: UiState) {
                 GroupDivider()
                 MenuRow(Icons.Filled.AddHome, "Aggiungi una casa", "Seconda casa, casa dei genitori…") { vm.startWizard(first = false) }
             }
+        }
+        item { SectionTitle("Stile") }
+        item {
+            val styles = listOf(StyleId.LINEE to "Linee", StyleId.ORIGINALE to "Originale", StyleId.ANDROID to "Android")
+            SegmentedChoice(styles.map { it.second }, selected = styles.indexOfFirst { it.first == state.settings.style }) { vm.setStyle(styles[it].first) }
         }
         item { SectionTitle("Tema") }
         item {

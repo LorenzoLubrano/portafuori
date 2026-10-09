@@ -17,10 +17,13 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.core.content.edit
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.lorenzolubrano.portafuori.data.StyleId
+import io.github.lorenzolubrano.portafuori.data.StylePrefs
 import io.github.lorenzolubrano.portafuori.data.ThemeMode
 import io.github.lorenzolubrano.portafuori.reminders.Notifications
 import io.github.lorenzolubrano.portafuori.ui.AppRoot
@@ -56,16 +59,17 @@ class MainActivity : ComponentActivity() {
     private val cachedTheme by lazy {
         uiPrefs.getString(KEY_THEME, null)?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM
     }
+    private val cachedStyle by lazy { StylePrefs.cached(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
-        darkBars = if (lightBarIcons(Styles.Linee, dark = false)) true else when (cachedTheme) {
+        darkBars = if (lightBarIcons(Styles.of(cachedStyle, this), dark = false)) true else when (cachedTheme) {
             ThemeMode.SYSTEM -> null
             ThemeMode.LIGHT -> false
             ThemeMode.DARK -> true
         }
         enableEdgeToEdge(statusBarStyle, navigationBarStyle)
-        applyWindowBackground(cachedTheme)
+        applyWindowBackground(cachedTheme, cachedStyle)
         super.onCreate(savedInstanceState)
         splash.setKeepOnScreenCondition { !vm.state.value.loaded }
         if (savedInstanceState == null) handleIntent(intent)
@@ -73,34 +77,47 @@ class MainActivity : ComponentActivity() {
             val state by vm.state.collectAsStateWithLifecycle()
             // Until the settings arrive, the cached copy is the best guess
             val theme = if (state.loaded) state.settings.theme else cachedTheme
+            val styleId = if (state.loaded) state.settings.style else cachedStyle
+            val style = remember(styleId) { Styles.of(styleId, this) }
             val dark = when (theme) {
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
                 ThemeMode.LIGHT -> false
                 ThemeMode.DARK -> true
             }
             // System bar icons follow the in-app theme and the style's shell, not only the system theme
-            val lightIcons = lightBarIcons(Styles.Linee, dark)
+            val lightIcons = lightBarIcons(style, dark)
             DisposableEffect(lightIcons) {
                 darkBars = lightIcons
                 enableEdgeToEdge(statusBarStyle, navigationBarStyle)
                 onDispose {}
             }
-            LaunchedEffect(state.loaded, state.settings.theme) {
-                if (state.loaded) rememberTheme(state.settings.theme)
+            LaunchedEffect(state.loaded, state.settings.theme, state.settings.style) {
+                if (state.loaded) rememberLook(state.settings.theme, state.settings.style)
             }
-            PortafuoriTheme(theme, Styles.Linee) { AppRoot(vm) }
+            PortafuoriTheme(theme, style) { AppRoot(vm) }
         }
     }
 
     /**
-     * Keeps the synchronous copy and the window background in line with the in-app theme, and from
+     * Keeps the synchronous copies and the window background in line with the in-app theme and style, and from
      * Android 12 tells the system the app's night mode. The system remembers it and uses it for the
      * splash and the starting windows it draws before the app runs (e.g. reopening from a notification
      * after the process was killed), which setSplashScreenTheme does not cover.
      */
-    private fun rememberTheme(mode: ThemeMode) {
+    private fun rememberLook(mode: ThemeMode, style: StyleId) {
         if (uiPrefs.getString(KEY_THEME, null) != mode.name) uiPrefs.edit { putString(KEY_THEME, mode.name) }
-        applyWindowBackground(mode)
+        StylePrefs.remember(this, style)
+        applyWindowBackground(mode, style)
+        // the system's own splash, from Android 13, in the colours of the style
+        if (Build.VERSION.SDK_INT >= 33) {
+            splashScreen.setSplashScreenTheme(
+                when (style) {
+                    StyleId.LINEE -> R.style.Theme_App_Starting
+                    StyleId.ORIGINALE -> R.style.Theme_App_Starting_Originale
+                    StyleId.ANDROID -> R.style.Theme_App_Starting_Android
+                },
+            )
+        }
         if (Build.VERSION.SDK_INT >= 31) {
             val night = when (mode) {
                 ThemeMode.SYSTEM -> UiModeManager.MODE_NIGHT_AUTO
@@ -112,12 +129,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** What shows before Compose draws its first frame. */
-    private fun applyWindowBackground(mode: ThemeMode) {
-        val color = when (mode) {
-            ThemeMode.SYSTEM -> R.color.splash_bg
-            ThemeMode.LIGHT -> R.color.splash_light
-            ThemeMode.DARK -> R.color.splash_dark
+    /** What shows before Compose draws its first frame, in the colours of the style. */
+    private fun applyWindowBackground(mode: ThemeMode, style: StyleId) {
+        val color = when (style) {
+            StyleId.LINEE -> when (mode) { ThemeMode.SYSTEM -> R.color.splash_bg; ThemeMode.LIGHT -> R.color.splash_light; ThemeMode.DARK -> R.color.splash_dark }
+            StyleId.ORIGINALE -> when (mode) { ThemeMode.SYSTEM -> R.color.splash_originale_bg; ThemeMode.LIGHT -> R.color.splash_originale_light; ThemeMode.DARK -> R.color.splash_originale_dark }
+            StyleId.ANDROID -> when (mode) { ThemeMode.SYSTEM -> R.color.splash_android_bg; ThemeMode.LIGHT -> R.color.splash_android_light; ThemeMode.DARK -> R.color.splash_android_dark }
         }
         window.setBackgroundDrawable(getColor(color).toDrawable())
     }

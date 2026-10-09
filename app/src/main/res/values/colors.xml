@@ -3,6 +3,12 @@
     <color name="splash_bg">@color/splash_light</color>
     <color name="splash_light">#F3F5F9</color>
     <color name="splash_dark">#0B1630</color>
+    <color name="splash_originale_bg">@color/splash_originale_light</color>
+    <color name="splash_originale_light">#F6F3EC</color>
+    <color name="splash_originale_dark">#111714</color>
+    <color name="splash_android_bg">@color/splash_android_light</color>
+    <color name="splash_android_light">#F9F9FF</color>
+    <color name="splash_android_dark">#111318</color>
     <color name="widget_bg">#F3F5F9</color>
     <color name="widget_text">#0E1A33</color>
     <color name="widget_text_muted">#4A5671</color>
