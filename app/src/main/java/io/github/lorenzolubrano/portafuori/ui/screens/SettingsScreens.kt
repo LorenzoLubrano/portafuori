@@ -103,7 +103,7 @@ fun MoreScreen(vm: MainViewModel, state: UiState) {
         }
         item { SectionTitle("Tema") }
         item {
-            val modes = listOf(ThemeMode.SYSTEM to "Come il telefono", ThemeMode.LIGHT to "Chiaro", ThemeMode.DARK to "Scuro")
+            val modes = listOf(ThemeMode.SYSTEM to "Sistema", ThemeMode.LIGHT to "Chiaro", ThemeMode.DARK to "Scuro")
             SegmentedChoice(modes.map { it.second }, selected = modes.indexOfFirst { it.first == state.settings.theme }) { vm.setTheme(modes[it].first) }
         }
         item { SectionTitle("Informazioni") }
