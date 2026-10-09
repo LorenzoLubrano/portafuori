@@ -61,16 +61,17 @@ class StyleActivitiesTest {
 
     @Test fun aFileFromAnotherAppOpensOnTopWithoutClosingThatApp() {
         val read = Intent.FLAG_GRANT_READ_URI_PERMISSION
-        // opened from a chat: on top of the chat, which stays where it is, and the file stays readable
+        val back = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         for (action in listOf(Intent.ACTION_SEND, Intent.ACTION_VIEW)) {
-            assertEquals(read or Intent.FLAG_ACTIVITY_SINGLE_TOP, StyleActivities.forwardFlags(action, read or Intent.FLAG_ACTIVITY_NEW_TASK))
+            // opened from a chat, inside the chat's task: on top of the chat, which stays; the file stays readable
+            assertEquals(read or Intent.FLAG_ACTIVITY_SINGLE_TOP, StyleActivities.forwardFlags(action, read, taskRoot = false))
+            // arrived in the app's own task (a download notification, our own share sheet): back to the activity
+            // already there, not a second copy of it
+            assertEquals(read or back, StyleActivities.forwardFlags(action, read or Intent.FLAG_ACTIVITY_NEW_TASK, taskRoot = true))
         }
         // the app's own ways in (launcher, widget, notification) come back to the style's activity already there
-        assertEquals(
-            Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP,
-            StyleActivities.forwardFlags(Intent.ACTION_MAIN, Intent.FLAG_ACTIVITY_NEW_TASK),
-        )
-        assertEquals(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP, StyleActivities.forwardFlags(null, 0))
+        assertEquals(back, StyleActivities.forwardFlags(Intent.ACTION_MAIN, Intent.FLAG_ACTIVITY_NEW_TASK, taskRoot = true))
+        assertEquals(back, StyleActivities.forwardFlags(null, 0, taskRoot = false))
     }
 
     @Test fun backLeavesTheOtherStylesInTheBackgroundLikeLinee() {

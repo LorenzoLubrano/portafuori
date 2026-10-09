@@ -70,7 +70,7 @@ open class MainActivity : ComponentActivity() {
             super.onCreate(savedInstanceState)
             val target = StyleActivities.of(cachedStyle)
             val launch = if (StyleActivities.carriesLaunchIntent(restored = savedInstanceState != null)) intent else Intent()
-            val next = Intent(launch).setClass(this, target).setFlags(StyleActivities.forwardFlags(launch.action, launch.flags))
+            val next = Intent(launch).setClass(this, target).setFlags(StyleActivities.forwardFlags(launch.action, launch.flags, isTaskRoot))
             startActivity(next, ActivityOptions.makeCustomAnimation(this, 0, 0).toBundle())
             finish()
             return

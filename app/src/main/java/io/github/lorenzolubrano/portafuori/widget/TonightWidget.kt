@@ -70,7 +70,7 @@ class TonightWidget : AppWidgetProvider() {
             val style = StylePrefs.cached(context)
             val v = RemoteViews(context.packageName, WidgetStyle.layout(style, compact))
             val open = PendingIntent.getActivity(
-                context, 0, Intent(context, StyleActivities.of(style)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                context, 0, Intent(context, StyleActivities.of(style)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
             v.setOnClickPendingIntent(R.id.widget_root, open)

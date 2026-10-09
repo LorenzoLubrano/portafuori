@@ -109,6 +109,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -304,9 +305,19 @@ fun ScanScreen(vm: MainViewModel) {
     }
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted = it }
     val found = remember { AtomicBoolean(false) }
-    // the frames are read off the main thread; the thread ends with the screen
+    // the frames are read off the main thread; camera and thread end with the screen (the camera is bound to the
+    // activity, which outlives it)
     val analyzer = remember { Executors.newSingleThreadExecutor() }
-    DisposableEffect(analyzer) { onDispose { analyzer.shutdown() } }
+    val camera = remember { AtomicReference<ProcessCameraProvider?>(null) }
+    // the camera may come up after the screen is gone (Back before it opened): then it is not bound at all
+    val gone = remember { AtomicBoolean(false) }
+    DisposableEffect(analyzer) {
+        onDispose {
+            gone.set(true)
+            camera.get()?.unbindAll()
+            analyzer.shutdown()
+        }
+    }
 
     Page(title = "Scansiona il QR", onBack = { vm.back() }) {
         item { Text("Inquadra il QR mostrato dal vicino.", style = MaterialTheme.typography.bodyLarge) }
@@ -327,7 +338,8 @@ fun ScanScreen(vm: MainViewModel) {
                             val view = PreviewView(ctx)
                             val providerFuture = ProcessCameraProvider.getInstance(ctx)
                             providerFuture.addListener({
-                                val provider = providerFuture.get()
+                                if (gone.get()) return@addListener
+                                val provider = providerFuture.get().also { camera.set(it) }
                                 val preview = Preview.Builder().build().also { it.setSurfaceProvider(view.surfaceProvider) }
                                 val analysis = ImageAnalysis.Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
                                 analysis.setAnalyzer(analyzer) { image ->

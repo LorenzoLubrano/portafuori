@@ -63,6 +63,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
@@ -201,7 +202,8 @@ private fun WeekLines(b: ProfileBundle, start: LocalDate, today: LocalDate, nigh
                     Box(
                         Modifier.width(colW + 4.dp).fillMaxHeight().clip(MaterialTheme.shapes.small)
                             .background(if (d == today) MaterialTheme.colorScheme.primary.copy(alpha = 0.07f) else Color.Transparent)
-                            .clickable { onOpen(d) }.clearAndSetSemantics {},
+                            // semantics are read inside out: cleared after the click, TalkBack never sees these areas
+                            .clearAndSetSemantics {}.focusProperties { canFocus = false }.clickable { onOpen(d) },
                     )
                 }
             }
