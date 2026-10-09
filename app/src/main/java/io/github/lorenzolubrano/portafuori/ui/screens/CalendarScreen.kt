@@ -38,6 +38,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.EventBusy
@@ -264,6 +265,8 @@ private fun BinLine(bin: Bin, stops: List<Stop>, big: Boolean, colW: Dp, morning
                             .background(fill).border(4.dp, c, CircleShape),
                     )
                     Stop.PENDING -> Icon(Icons.Filled.EventBusy, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(20.dp))
+                    // moved to another evening: an arrow in the line's colour, not the faded ring of a skipped one
+                    Stop.MOVED -> Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = edge ?: c, modifier = Modifier.size(18.dp))
                     Stop.SKIPPED -> Box(Modifier.size(14.dp).clip(CircleShape).border(2.dp, (edge ?: c).copy(alpha = 0.5f), CircleShape))
                     Stop.NONE -> {}
                 }

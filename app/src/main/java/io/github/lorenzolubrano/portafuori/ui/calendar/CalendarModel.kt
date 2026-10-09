@@ -7,7 +7,7 @@ import io.github.lorenzolubrano.portafuori.rules.Status
 import java.time.LocalDate
 
 /** How a bin stands on one evening of the calendar. */
-enum class Stop { NONE, OUT, PENDING, SKIPPED }
+enum class Stop { NONE, OUT, PENDING, MOVED, SKIPPED }
 
 /** Everything put out on one evening, active or not, so skipped and moved collections stay visible. */
 data class Night(val evening: LocalDate, val occurrences: List<Occurrence>) {
@@ -22,6 +22,7 @@ data class Night(val evening: LocalDate, val occurrences: List<Occurrence>) {
             mine.isEmpty() -> Stop.NONE
             mine.any { it.status == Status.HOLIDAY_PENDING } -> Stop.PENDING
             mine.any { it.isActive } -> Stop.OUT
+            mine.any { it.status == Status.MOVED_OUT } -> Stop.MOVED
             else -> Stop.SKIPPED
         }
     }

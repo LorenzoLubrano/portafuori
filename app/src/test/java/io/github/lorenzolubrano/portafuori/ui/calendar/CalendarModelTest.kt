@@ -53,11 +53,11 @@ class CalendarModelTest {
         assertEquals(listOf(1L), wed.activeBinIds)
     }
 
-    /** A moved collection leaves its old evening (shown there as not going out) and goes out on the new one. */
+    /** A moved collection leaves its old evening (shown there as moved, not as skipped) and goes out on the new one. */
     @Test fun movedCollectionGoesOutOnItsNewEvening() {
         val move = ExceptionEntity(profileId = 1, binId = 2, kind = ExceptionKind.MOVE, date = LocalDate.of(2026, 10, 8), target = LocalDate.of(2026, 10, 9))
         val nights = CalendarModel.nights(bundle(exceptions = listOf(move)), mon5, mon5.plusDays(6))
-        assertEquals(Stop.SKIPPED, nights.getValue(LocalDate.of(2026, 10, 7)).stopOf(2))
+        assertEquals(Stop.MOVED, nights.getValue(LocalDate.of(2026, 10, 7)).stopOf(2))
         assertEquals(Stop.OUT, nights.getValue(LocalDate.of(2026, 10, 7)).stopOf(1))
         assertEquals(Stop.OUT, nights.getValue(LocalDate.of(2026, 10, 8)).stopOf(2))
     }

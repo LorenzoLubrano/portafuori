@@ -55,7 +55,7 @@ object Wording {
 
     fun upcomingTitle(morning: Boolean) = if (morning) "Prossime mattine" else "Prossime sere"
 
-    /** "Carta: mercoledì, sabato festivo da confermare; saltato lunedì": a bin's week line, as TalkBack reads it. */
+    /** "Carta: mercoledì, sabato festivo da confermare; spostato lunedì": a bin's week line, as TalkBack reads it. */
     fun binWeek(name: String, days: List<Pair<Stop, String>>, morning: Boolean): String {
         val out = days.mapNotNull { (stop, day) ->
             when (stop) {
@@ -64,9 +64,11 @@ object Wording {
                 else -> null
             }
         }.joinToString().ifEmpty { if (morning) "nessuna mattina" else "nessuna sera" }
-        val skipped = days.filter { it.first == Stop.SKIPPED }.map { it.second }
-        val tail = if (skipped.isEmpty()) "" else "; " + (if (skipped.size == 1) "saltato " else "saltati ") + skipped.joinToString()
-        return "$name: $out$tail"
+        fun gone(stop: Stop, one: String, many: String): String {
+            val list = days.filter { it.first == stop }.map { it.second }
+            return if (list.isEmpty()) "" else "; " + (if (list.size == 1) one else many) + " " + list.joinToString()
+        }
+        return "$name: $out" + gone(Stop.MOVED, "spostato", "spostati") + gone(Stop.SKIPPED, "saltato", "saltati")
     }
 
     fun iconName(key: String): String = when (key) {

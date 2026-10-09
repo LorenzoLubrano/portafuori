@@ -84,6 +84,7 @@ class WordingTest {
         assertEquals("Carta: nessuna sera", Wording.binWeek("Carta", emptyList(), morning = false))
         assertEquals("Carta: nessuna mattina", Wording.binWeek("Carta", emptyList(), morning = true))
         assertEquals("Carta: nessuna sera; saltati lunedì, giovedì", Wording.binWeek("Carta", listOf(Stop.SKIPPED to "lunedì", Stop.SKIPPED to "giovedì"), morning = false))
+        assertEquals("Carta: giovedì; spostato mercoledì", Wording.binWeek("Carta", listOf(Stop.MOVED to "mercoledì", Stop.OUT to "giovedì"), morning = false))
     }
 
     @Test fun iconNames() {
