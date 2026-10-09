@@ -31,6 +31,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
+            android:relinquishTaskIdentity="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -49,6 +50,22 @@
                 <data android:mimeType="application/json" />
             </intent-filter>
         </activity>
+        <!-- The app in the other styles. MainActivity hands them its intents; their theme gives the
+             starting window the style's colours when the system reopens the task. -->
+        <activity
+            android:name=".MainActivityOriginale"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:relinquishTaskIdentity="true"
+            android:theme="@style/Theme.App.Starting.Originale"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".MainActivityAndroid"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:relinquishTaskIdentity="true"
+            android:theme="@style/Theme.App.Starting.Android"
+            android:windowSoftInputMode="adjustResize" />
 
         <receiver android:name=".reminders.AlarmReceiver" android:exported="false" />
         <receiver android:name=".reminders.ActionReceiver" android:exported="false" />

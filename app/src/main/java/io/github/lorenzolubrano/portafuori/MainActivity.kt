@@ -1,5 +1,6 @@
 package io.github.lorenzolubrano.portafuori
 
+import android.app.ActivityOptions
 import android.app.UiModeManager
 import android.content.Intent
 import android.content.res.Configuration
@@ -40,7 +41,7 @@ private val DARK_SCRIM = Color.argb(0x80, 0x1b, 0x1b, 0x1b)
 private const val UI_PREFS = "ui"
 private const val KEY_THEME = "theme"
 
-class MainActivity : ComponentActivity() {
+open class MainActivity : ComponentActivity() {
     private val vm: MainViewModel by viewModels()
 
     // In-app theme once known (null = follow the system). The bar styles read it every time they
@@ -62,6 +63,17 @@ class MainActivity : ComponentActivity() {
     private val cachedStyle by lazy { StylePrefs.cached(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (javaClass != StyleActivities.of(cachedStyle)) {
+            // Not this style's activity: hand the intent over without drawing. The starting window
+            // already showing moves to the new activity.
+            super.onCreate(savedInstanceState)
+            val next = Intent(intent).setClass(this, StyleActivities.of(cachedStyle))
+                // in this task, onto the style's activity if it is already there; a shared file stays readable
+                .setFlags((intent.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION) or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            startActivity(next, ActivityOptions.makeCustomAnimation(this, 0, 0).toBundle())
+            finish()
+            return
+        }
         val splash = installSplashScreen()
         darkBars = if (lightBarIcons(Styles.of(cachedStyle, this), dark = false)) true else when (cachedTheme) {
             ThemeMode.SYSTEM -> null
@@ -118,6 +130,13 @@ class MainActivity : ComponentActivity() {
                 },
             )
         }
+        if (javaClass != StyleActivities.of(style)) {
+            // A new style lives in its own activity: reopen there, on the same tab
+            val next = Intent(this, StyleActivities.of(style))
+            if (vm.tab == Screen.More) next.putExtra(Notifications.EXTRA_OPEN, "more")
+            startActivity(next, ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle())
+            finish()
+        }
         if (Build.VERSION.SDK_INT >= 31) {
             val night = when (mode) {
                 ThemeMode.SYSTEM -> UiModeManager.MODE_NIGHT_AUTO
@@ -170,6 +189,7 @@ class MainActivity : ComponentActivity() {
         when (intent.getStringExtra(Notifications.EXTRA_OPEN)) {
             "holidays" -> vm.open(Screen.Holidays)
             "today" -> vm.switchTab(Screen.Today)
+            "more" -> vm.switchTab(Screen.More)
         }
     }
 }
