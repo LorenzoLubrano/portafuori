@@ -101,7 +101,7 @@ import io.github.lorenzolubrano.portafuori.ui.calendar.CalendarModel
 import io.github.lorenzolubrano.portafuori.ui.calendar.Night
 import io.github.lorenzolubrano.portafuori.ui.calendar.Stop
 import io.github.lorenzolubrano.portafuori.ui.theme.Contrast
-import io.github.lorenzolubrano.portafuori.ui.theme.Styles
+import io.github.lorenzolubrano.portafuori.ui.theme.currentStyle
 import io.github.lorenzolubrano.portafuori.ui.theme.extra
 import io.github.lorenzolubrano.portafuori.ui.theme.lightBarIcons
 import java.time.DayOfWeek
@@ -360,13 +360,14 @@ fun DaySheet(vm: MainViewModel, b: ProfileBundle, date: LocalDate, holiday: Stri
     var moving by remember { mutableStateOf<Occurrence?>(null) }
     val pid = b.profile.id
     val appDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val style = currentStyle()
     ModalBottomSheet(
         onDismissRequest = onClose,
         sheetState = sheet,
         // the sheet is a window of its own: its bar icons follow the app (shell above, sheet below), not the phone theme
         properties = ModalBottomSheetProperties(
-            isAppearanceLightStatusBars = !lightBarIcons(Styles.current, appDark),
-            isAppearanceLightNavigationBars = !lightBarIcons(Styles.current, appDark),
+            isAppearanceLightStatusBars = !lightBarIcons(style, appDark),
+            isAppearanceLightNavigationBars = !lightBarIcons(style, appDark),
         ),
         // the bottom inset is drawn below as the shell, like every other screen
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal) },

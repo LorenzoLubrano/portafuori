@@ -9,19 +9,23 @@ import androidx.compose.ui.graphics.luminance
 import io.github.lorenzolubrano.portafuori.data.ThemeMode
 
 @Composable
-fun PortafuoriTheme(mode: ThemeMode, style: PortafuoriStyle = Styles.current, content: @Composable () -> Unit) {
+fun PortafuoriTheme(mode: ThemeMode, style: PortafuoriStyle, content: @Composable () -> Unit) {
     val dark = when (mode) {
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
     }
-    CompositionLocalProvider(LocalTokens provides Tokens(if (dark) style.darkExtra else style.lightExtra, dark)) {
+    CompositionLocalProvider(LocalTokens provides Tokens(if (dark) style.darkExtra else style.lightExtra, dark, style)) {
         MaterialTheme(colorScheme = if (dark) style.dark else style.light, typography = style.typography, shapes = style.shapes, content = content)
     }
 }
 
 @Composable
 fun extra(): ExtraColors = LocalTokens.current.extra
+
+/** The style the app is drawn with right now. */
+@Composable
+fun currentStyle(): PortafuoriStyle = LocalTokens.current.style
 
 /** Success green that works on both themes. */
 @Composable

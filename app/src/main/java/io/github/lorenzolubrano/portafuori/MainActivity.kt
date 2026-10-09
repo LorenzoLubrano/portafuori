@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
-        darkBars = if (lightBarIcons(Styles.current, dark = false)) true else when (cachedTheme) {
+        darkBars = if (lightBarIcons(Styles.Linee, dark = false)) true else when (cachedTheme) {
             ThemeMode.SYSTEM -> null
             ThemeMode.LIGHT -> false
             ThemeMode.DARK -> true
@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.DARK -> true
             }
             // System bar icons follow the in-app theme and the style's shell, not only the system theme
-            val lightIcons = lightBarIcons(Styles.current, dark)
+            val lightIcons = lightBarIcons(Styles.Linee, dark)
             DisposableEffect(lightIcons) {
                 darkBars = lightIcons
                 enableEdgeToEdge(statusBarStyle, navigationBarStyle)
@@ -88,7 +88,7 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(state.loaded, state.settings.theme) {
                 if (state.loaded) rememberTheme(state.settings.theme)
             }
-            PortafuoriTheme(theme) { AppRoot(vm) }
+            PortafuoriTheme(theme, Styles.Linee) { AppRoot(vm) }
         }
     }
 
