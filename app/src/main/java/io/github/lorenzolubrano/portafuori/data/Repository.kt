@@ -211,9 +211,20 @@ private val Context.dataStore by preferencesDataStore(
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+/** The look of the app (spec «stili»). Linee by default, also for upgrades. */
+enum class StyleId {
+    LINEE, ORIGINALE, ANDROID;
+
+    companion object {
+        /** A missing or unknown stored value is Linee. */
+        fun parse(value: String?): StyleId = entries.firstOrNull { it.name == value } ?: LINEE
+    }
+}
+
 data class AppSettings(
     val selectedProfileId: Long? = null,
     val theme: ThemeMode = ThemeMode.SYSTEM,
+    val style: StyleId = StyleId.LINEE,
     val lastBackupAt: Long? = null,
     val autoBackupUri: String? = null,
     val testAt: Long? = null,
@@ -224,6 +235,7 @@ class Settings(private val context: Context) {
     private object K {
         val selected = longPreferencesKey("selected_profile")
         val theme = stringPreferencesKey("theme")
+        val style = stringPreferencesKey("style")
         val lastBackup = longPreferencesKey("last_backup")
         val autoBackup = stringPreferencesKey("auto_backup_uri")
         val testAt = longPreferencesKey("test_at")
@@ -234,6 +246,7 @@ class Settings(private val context: Context) {
         AppSettings(
             selectedProfileId = p[K.selected],
             theme = p[K.theme]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM,
+            style = StyleId.parse(p[K.style]),
             lastBackupAt = p[K.lastBackup],
             autoBackupUri = p[K.autoBackup],
             testAt = p[K.testAt],
@@ -245,6 +258,7 @@ class Settings(private val context: Context) {
 
     suspend fun setSelectedProfile(id: Long) = context.dataStore.edit { it[K.selected] = id }
     suspend fun setTheme(mode: ThemeMode) = context.dataStore.edit { it[K.theme] = mode.name }
+    suspend fun setStyle(id: StyleId) = context.dataStore.edit { it[K.style] = id.name }
     suspend fun setLastBackup(at: Long) = context.dataStore.edit { it[K.lastBackup] = at }
     suspend fun setAutoBackupUri(uri: String?) = context.dataStore.edit {
         if (uri == null) it.remove(K.autoBackup) else it[K.autoBackup] = uri

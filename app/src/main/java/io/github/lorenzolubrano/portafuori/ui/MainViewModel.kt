@@ -20,6 +20,8 @@ import io.github.lorenzolubrano.portafuori.data.HolidayEntity
 import io.github.lorenzolubrano.portafuori.data.Presets
 import io.github.lorenzolubrano.portafuori.data.ProfileBundle
 import io.github.lorenzolubrano.portafuori.data.ProfileEntity
+import io.github.lorenzolubrano.portafuori.data.StyleId
+import io.github.lorenzolubrano.portafuori.data.StylePrefs
 import io.github.lorenzolubrano.portafuori.data.ThemeMode
 import io.github.lorenzolubrano.portafuori.reminders.Engine
 import io.github.lorenzolubrano.portafuori.reminders.Notifications
@@ -161,6 +163,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         clearStack()
     }
     fun setTheme(mode: ThemeMode) = launch { settingsStore.setTheme(mode) }
+
+    /** The copy is written first, so the widget and the notification redrawn right after already see the new style. */
+    fun setStyle(id: StyleId) = launch {
+        StylePrefs.remember(app, id)
+        settingsStore.setStyle(id)
+        Engine.runAsync(app)
+    }
 
     /** Bin editor draft: lives in the ViewModel so a rotation or a system theme change keeps the edits. */
     data class BinDraft(val binId: Long?, val name: String, val color: Long, val icon: String, val rules: List<Rule>)
