@@ -3,6 +3,7 @@ package io.github.lorenzolubrano.portafuori.ui
 import io.github.lorenzolubrano.portafuori.data.Evening
 import io.github.lorenzolubrano.portafuori.data.Presets
 import io.github.lorenzolubrano.portafuori.rules.It
+import io.github.lorenzolubrano.portafuori.ui.calendar.Stop
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
@@ -37,7 +38,7 @@ object Wording {
     private fun elided(day: Int) = day == 1 || day == 8 || day == 11
     private fun monthName(d: LocalDate) = d.month.getDisplayName(TextStyle.FULL, It.locale)
 
-    fun weekTitle(start: LocalDate): String {
+    fun weekTitle(start: LocalDate, morning: Boolean = false): String {
         val end = start.plusDays(6)
         val dal = if (elided(start.dayOfMonth)) "dall'" else "dal "
         val al = if (elided(end.dayOfMonth)) "all'" else "al "
@@ -47,10 +48,26 @@ object Wording {
             else -> "${start.dayOfMonth}"
         }
         val endPart = "${end.dayOfMonth} ${monthName(end)}" + if (start.year != end.year) " ${end.year}" else ""
-        return "Sere $dal$startPart $al$endPart"
+        return (if (morning) "Mattine" else "Sere") + " $dal$startPart $al$endPart"
     }
 
-    fun monthTitle(m: YearMonth) = "Sere di ${m.month.getDisplayName(TextStyle.FULL, It.locale)} ${m.year}"
+    fun monthTitle(m: YearMonth, morning: Boolean = false) = (if (morning) "Mattine" else "Sere") + " di ${m.month.getDisplayName(TextStyle.FULL, It.locale)} ${m.year}"
+
+    fun upcomingTitle(morning: Boolean) = if (morning) "Prossime mattine" else "Prossime sere"
+
+    /** "Carta: mercoledì, sabato festivo da confermare; saltato lunedì": a bin's week line, as TalkBack reads it. */
+    fun binWeek(name: String, days: List<Pair<Stop, String>>, morning: Boolean): String {
+        val out = days.mapNotNull { (stop, day) ->
+            when (stop) {
+                Stop.OUT -> day
+                Stop.PENDING -> "$day festivo da confermare"
+                else -> null
+            }
+        }.joinToString().ifEmpty { if (morning) "nessuna mattina" else "nessuna sera" }
+        val skipped = days.filter { it.first == Stop.SKIPPED }.map { it.second }
+        val tail = if (skipped.isEmpty()) "" else "; " + (if (skipped.size == 1) "saltato " else "saltati ") + skipped.joinToString()
+        return "$name: $out$tail"
+    }
 
     fun iconName(key: String): String = when (key) {
         "compost" -> "Organico"

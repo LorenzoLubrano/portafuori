@@ -179,7 +179,7 @@ fun TodayScreen(vm: MainViewModel, state: UiState) {
         }
 
         if (upcoming.isNotEmpty()) {
-            item { SectionTitle("Prossime sere") }
+            item { SectionTitle(Wording.upcomingTitle(b.morning)) }
             item {
                 Route { upcoming.forEach { e -> RouteStop { UpcomingStop(e, now) } } }
             }

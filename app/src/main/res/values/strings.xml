@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Portafuori</string>
     <string name="widget_done">Fatto</string>
-    <string name="widget_exposed">Esposti</string>
-    <string name="widget_description">Quali bidoni esporre stasera</string>
+    <string name="widget_exposed">Sono fuori</string>
+    <string name="widget_description">Quali bidoni portare fuori stasera</string>
     <string name="widget_label">Portafuori: stasera</string>
 </resources>

@@ -404,7 +404,7 @@ fun ImportPreviewScreen(vm: MainViewModel, state: UiState) {
                 if (isBackup) {
                     val p = pb.profile
                     Text(
-                        "Avvisi: esponi " + (if (p.exposeReminderOn) It.time(p.exposeReminderAt) else "spento") +
+                        "Avvisi: porta fuori " + (if (p.exposeReminderOn) It.time(p.exposeReminderAt) else "spento") +
                             " · prepara " + (if (p.prepareReminderOn) It.time(p.prepareReminderAt) else "spento") +
                             " · ritira " + (if (p.retrieveReminderOn) It.time(p.retrieveReminderAt) else "spento"),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary,

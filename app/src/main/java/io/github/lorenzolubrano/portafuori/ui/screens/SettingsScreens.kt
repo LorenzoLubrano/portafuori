@@ -185,14 +185,14 @@ fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
             Column(Modifier.selectableGroup()) {
                 GroupLabel("Il tuo calendario indica…")
                 RadioLine("Indica il giorno del ritiro", p.calendarMode == CalendarMode.COLLECTION_DAY) { set(p.copy(calendarMode = CalendarMode.COLLECTION_DAY)) }
-                RadioLine("Indica la sera in cui esporre", p.calendarMode == CalendarMode.EXPOSE_DAY) { set(p.copy(calendarMode = CalendarMode.EXPOSE_DAY)) }
+                RadioLine("Indica la sera in cui portarli fuori", p.calendarMode == CalendarMode.EXPOSE_DAY) { set(p.copy(calendarMode = CalendarMode.EXPOSE_DAY)) }
             }
         }
         item {
             Column(Modifier.selectableGroup()) {
-                GroupLabel("Quando si espone il bidone?")
-                RadioLine("Si espone la sera prima", p.exposureMode == ExposureMode.EVENING_BEFORE) { set(p.copy(exposureMode = ExposureMode.EVENING_BEFORE)) }
-                RadioLine("Si espone la mattina stessa", p.exposureMode == ExposureMode.SAME_MORNING) { set(p.copy(exposureMode = ExposureMode.SAME_MORNING)) }
+                GroupLabel("Quando si porta fuori il bidone?")
+                RadioLine("Si porta fuori la sera prima", p.exposureMode == ExposureMode.EVENING_BEFORE) { set(p.copy(exposureMode = ExposureMode.EVENING_BEFORE)) }
+                RadioLine("Si porta fuori la mattina stessa", p.exposureMode == ExposureMode.SAME_MORNING) { set(p.copy(exposureMode = ExposureMode.SAME_MORNING)) }
             }
         }
         item {
@@ -208,7 +208,7 @@ fun ProfileSettingsScreen(vm: MainViewModel, state: UiState) {
         }
         item { SectionTitle("Avvisi") }
         item {
-            ReminderLine("Esponi", "L'avviso principale", p.exposeReminderOn, p.exposeReminderAt, { set(p.copy(exposeReminderOn = it)) }, { set(p.copy(exposeReminderAt = it)) })
+            ReminderLine("Porta fuori", "L'avviso principale", p.exposeReminderOn, p.exposeReminderAt, { set(p.copy(exposeReminderOn = it)) }, { set(p.copy(exposeReminderAt = it)) })
         }
         item {
             ReminderLine("Prepara", "Un avviso prima, per svuotare i cestini", p.prepareReminderOn, p.prepareReminderAt, { set(p.copy(prepareReminderOn = it)) }, { set(p.copy(prepareReminderAt = it)) })

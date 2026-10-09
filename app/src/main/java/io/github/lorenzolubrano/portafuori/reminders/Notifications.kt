@@ -29,8 +29,8 @@ object Notifications {
         val nm = context.getSystemService(NotificationManager::class.java)
         nm.createNotificationChannels(
             listOf(
-                NotificationChannel(CH_EXPOSE, "Esponi i bidoni", NotificationManager.IMPORTANCE_HIGH)
-                    .apply { description = "L'avviso della sera: quali bidoni esporre" },
+                NotificationChannel(CH_EXPOSE, "Porta fuori i bidoni", NotificationManager.IMPORTANCE_HIGH)
+                    .apply { description = "L'avviso della sera: quali bidoni portare fuori" },
                 NotificationChannel(CH_RETRIEVE, "Ritira i bidoni", NotificationManager.IMPORTANCE_DEFAULT)
                     .apply { description = "Promemoria per riportare dentro i bidoni" },
                 NotificationChannel(CH_HOLIDAY, "Festività e calendario", NotificationManager.IMPORTANCE_DEFAULT)

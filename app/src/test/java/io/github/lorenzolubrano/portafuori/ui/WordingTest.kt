@@ -2,6 +2,7 @@ package io.github.lorenzolubrano.portafuori.ui
 
 import io.github.lorenzolubrano.portafuori.data.Presets
 import io.github.lorenzolubrano.portafuori.rules.It
+import io.github.lorenzolubrano.portafuori.ui.calendar.Stop
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.LocalDate
@@ -64,6 +65,26 @@ class WordingTest {
     }
 
     @Test fun monthTitle() = assertEquals("Sere di ottobre 2026", Wording.monthTitle(YearMonth.of(2026, 10)))
+
+    /** Bins out in the morning: the calendar and Oggi speak of mornings. */
+    @Test fun morningTitles() {
+        assertEquals("Mattine dal 5 all'11 ottobre", Wording.weekTitle(LocalDate.of(2026, 10, 5), morning = true))
+        assertEquals("Mattine di ottobre 2026", Wording.monthTitle(YearMonth.of(2026, 10), morning = true))
+        assertEquals("Prossime sere", Wording.upcomingTitle(morning = false))
+        assertEquals("Prossime mattine", Wording.upcomingTitle(morning = true))
+    }
+
+    /** TalkBack reads a bin's week as it is drawn: out, waiting for a holiday answer, skipped. */
+    @Test fun binWeekForTalkBack() {
+        assertEquals("Carta: mercoledì, sabato", Wording.binWeek("Carta", listOf(Stop.NONE to "lunedì", Stop.OUT to "mercoledì", Stop.OUT to "sabato"), morning = false))
+        assertEquals(
+            "Carta: mercoledì, sabato festivo da confermare; saltato lunedì",
+            Wording.binWeek("Carta", listOf(Stop.SKIPPED to "lunedì", Stop.OUT to "mercoledì", Stop.PENDING to "sabato"), morning = false),
+        )
+        assertEquals("Carta: nessuna sera", Wording.binWeek("Carta", emptyList(), morning = false))
+        assertEquals("Carta: nessuna mattina", Wording.binWeek("Carta", emptyList(), morning = true))
+        assertEquals("Carta: nessuna sera; saltati lunedì, giovedì", Wording.binWeek("Carta", listOf(Stop.SKIPPED to "lunedì", Stop.SKIPPED to "giovedì"), morning = false))
+    }
 
     @Test fun iconNames() {
         val keys = listOf("compost", "bottle", "paper", "glass", "trash", "recycle", "grass", "baby", "bag", "box", "battery", "oil")

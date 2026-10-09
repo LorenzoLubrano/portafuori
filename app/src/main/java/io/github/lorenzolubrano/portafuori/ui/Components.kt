@@ -75,6 +75,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -352,9 +353,12 @@ fun RowGroup(content: @Composable ColumnScope.() -> Unit) {
 
 /** A tappable row inside a [RowGroup]; TalkBack reads its texts together. */
 @Composable
-fun GroupRow(onClick: () -> Unit, content: @Composable RowScope.() -> Unit) {
+fun GroupRow(onClick: () -> Unit, state: String? = null, content: @Composable RowScope.() -> Unit) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 64.dp).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp),
+        Modifier.fillMaxWidth().heightIn(min = 64.dp).clickable(onClick = onClick)
+            // a row that opens and closes says which it is
+            .then(if (state != null) Modifier.semantics { stateDescription = state } else Modifier)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         content = content,
     )

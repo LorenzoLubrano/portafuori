@@ -167,7 +167,7 @@ fun ReliabilityScreen(vm: MainViewModel) {
                     key(g.brand) {
                         if (n > 0) GroupDivider(16.dp)
                         val open = expanded == g.brand
-                        GroupRow(onClick = { expanded = if (open) "" else g.brand }) {
+                        GroupRow(onClick = { expanded = if (open) "" else g.brand }, state = if (open) "aperta" else "chiusa") {
                             Text(g.brand + if (g == mine) " (il tuo)" else "", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                             Icon(if (open) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null)
                         }

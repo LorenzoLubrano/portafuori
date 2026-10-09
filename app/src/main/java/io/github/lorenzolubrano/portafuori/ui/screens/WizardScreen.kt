@@ -119,7 +119,7 @@ fun WelcomeScreen(vm: MainViewModel) {
         Text("Stasera cosa esce?", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(8.dp))
         Text(
-            "${Brand.NAME} ti avvisa la sera prima quali bidoni esporre. Inserisci una volta il calendario del tuo comune, oppure importalo da un vicino.",
+            "${Brand.NAME} ti avvisa la sera prima quali bidoni portare fuori. Inserisci una volta il calendario del tuo comune, oppure importalo da un vicino.",
             style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(28.dp))
@@ -223,13 +223,13 @@ fun WizardScreen(vm: MainViewModel) {
                 item { SectionTitle("Il tuo calendario indica…") }
                 item {
                     RadioLine("Il giorno del ritiro", w.calendarMode == CalendarMode.COLLECTION_DAY) { set { it.copy(calendarMode = CalendarMode.COLLECTION_DAY) } }
-                    RadioLine("La sera in cui esporre", w.calendarMode == CalendarMode.EXPOSE_DAY) { set { it.copy(calendarMode = CalendarMode.EXPOSE_DAY) } }
+                    RadioLine("La sera in cui portarli fuori", w.calendarMode == CalendarMode.EXPOSE_DAY) { set { it.copy(calendarMode = CalendarMode.EXPOSE_DAY) } }
                     Text(
                         "Guarda il volantino: se dice «lunedì: carta» e passano lunedì mattina, è il giorno del ritiro.",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                item { SectionTitle("Quando si espone il bidone?") }
+                item { SectionTitle("Quando si porta fuori il bidone?") }
                 item {
                     RadioLine("La sera prima del ritiro", w.exposureMode == ExposureMode.EVENING_BEFORE) {
                         set { it.copy(exposureMode = ExposureMode.EVENING_BEFORE, exposeStart = java.time.LocalTime.of(20, 0), exposeEnd = java.time.LocalTime.of(6, 0)) }
@@ -238,7 +238,7 @@ fun WizardScreen(vm: MainViewModel) {
                         set { it.copy(exposureMode = ExposureMode.SAME_MORNING, exposeStart = java.time.LocalTime.of(5, 0), exposeEnd = java.time.LocalTime.of(7, 0)) }
                     }
                 }
-                item { SectionTitle("Orari di esposizione") }
+                item { SectionTitle("Orari per portarli fuori") }
                 item {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TimeField("Dalle", w.exposeStart) { t -> set { it.copy(exposeStart = t) } }
@@ -249,7 +249,7 @@ fun WizardScreen(vm: MainViewModel) {
             3 -> {
                 item {
                     Text(
-                        if (w.calendarMode == CalendarMode.COLLECTION_DAY) "Scegli i giorni del ritiro di ogni bidone." else "Scegli le sere in cui esporre ogni bidone.",
+                        if (w.calendarMode == CalendarMode.COLLECTION_DAY) "Scegli i giorni del ritiro di ogni bidone." else "Scegli le sere in cui portare fuori ogni bidone.",
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }
@@ -277,7 +277,7 @@ fun WizardScreen(vm: MainViewModel) {
                 item { Text("Scegli quando ricevere gli avvisi. Arriva un solo avviso per sera, con tutti i bidoni.", style = MaterialTheme.typography.bodyLarge) }
                 item {
                     ReminderLine(
-                        "Esponi", if (w.exposureMode == ExposureMode.EVENING_BEFORE) "La sera dell'esposizione" else "La sera prima o la mattina",
+                        "Porta fuori", if (w.exposureMode == ExposureMode.EVENING_BEFORE) "La sera in cui escono" else "La sera prima o la mattina",
                         w.exposeOn, w.exposeAt, { v -> set { it.copy(exposeOn = v) } }, { t -> set { it.copy(exposeAt = t) } },
                     )
                 }

@@ -126,7 +126,7 @@ fun CalendarScreen(vm: MainViewModel, state: UiState) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (m == 0) {
                         Pager(
-                            Wording.weekTitle(weekStart), "Settimana precedente", "Settimana successiva",
+                            Wording.weekTitle(weekStart, b.morning), "Settimana precedente", "Settimana successiva",
                             { weekStart = weekStart.minusWeeks(1) }, { weekStart = weekStart.plusWeeks(1) },
                         )
                         AnimatedContent(weekStart, transitionSpec = { slideByTime() }, label = "settimana") { ws ->
@@ -135,7 +135,7 @@ fun CalendarScreen(vm: MainViewModel, state: UiState) {
                         }
                     } else {
                         Pager(
-                            Wording.monthTitle(month), "Mese precedente", "Mese successivo",
+                            Wording.monthTitle(month, b.morning), "Mese precedente", "Mese successivo",
                             { month = month.minusMonths(1) }, { month = month.plusMonths(1) },
                         )
                         AnimatedContent(month, transitionSpec = { slideByTime() }, label = "mese") { ym ->
@@ -216,14 +216,14 @@ private fun WeekLines(b: ProfileBundle, start: LocalDate, today: LocalDate, nigh
             }
             b.bins.forEach { bin ->
                 val stops = days.map { nights[it]?.stopOf(bin.id) ?: Stop.NONE }
-                BinLine(bin, stops, big, colW)
+                BinLine(bin, stops, big, colW, b.morning)
             }
         }
     }
 }
 
 @Composable
-private fun BinLine(bin: Bin, stops: List<Stop>, big: Boolean, colW: Dp) {
+private fun BinLine(bin: Bin, stops: List<Stop>, big: Boolean, colW: Dp, morning: Boolean) {
     val c = bin.entity.colorArgb.asColor()
     val edge = edgeFor(bin.entity.colorArgb)
     val fill = MaterialTheme.colorScheme.surfaceContainerLowest
@@ -253,8 +253,7 @@ private fun BinLine(bin: Bin, stops: List<Stop>, big: Boolean, colW: Dp) {
             }
         }
     }
-    val desc = bin.name + ": " + stops.zip(listOf("lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"))
-        .filter { it.first == Stop.OUT || it.first == Stop.PENDING }.joinToString { it.second }.ifEmpty { "nessuna sera" }
+    val desc = Wording.binWeek(bin.name, stops.zip(listOf("lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica")), morning)
     Column(Modifier.padding(vertical = 4.dp).semantics(mergeDescendants = true) { contentDescription = desc }) {
         if (big) {
             label(); Row(content = stopsRow)

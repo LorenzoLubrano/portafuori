@@ -36,4 +36,15 @@ class PlannerLabelTest {
         assertEquals("Stanotte", Planner.label(evening, at("2026-09-24", "00:03")))
         assertEquals("Stanotte", Planner.label(evening, at("2026-09-24", "05:59")))
     }
+
+    @Test fun windowTextSaysWhenToPutThemOut() {
+        assertEquals("Da portare fuori dalle 20:00, ritiro entro le 6:00 di giovedì 24 settembre.", Planner.windowText(evening))
+        val sameDay = evening.copy(
+            window = ExposureWindow(
+                ZonedDateTime.of(LocalDate.parse("2026-09-23"), LocalTime.of(20, 0), ROME),
+                ZonedDateTime.of(LocalDate.parse("2026-09-23"), LocalTime.of(23, 0), ROME),
+            ),
+        )
+        assertEquals("Da portare fuori dalle 20:00 alle 23:00.", Planner.windowText(sameDay))
+    }
 }

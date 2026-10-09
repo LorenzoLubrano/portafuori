@@ -138,11 +138,11 @@ fun BinsScreen(vm: MainViewModel, state: UiState) {
             val p = b.profile
             Card(onClick = { vm.open(Screen.ProfileSettings) }) {
                 Text(
-                    if (p.calendarMode == CalendarMode.COLLECTION_DAY) "Il calendario indica il giorno del ritiro" else "Il calendario indica la sera in cui esporre",
+                    if (p.calendarMode == CalendarMode.COLLECTION_DAY) "Il calendario indica il giorno del ritiro" else "Il calendario indica la sera in cui portarli fuori",
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    (if (p.exposureMode == ExposureMode.EVENING_BEFORE) "Esposizione la sera prima" else "Esposizione la mattina stessa") +
+                    (if (p.exposureMode == ExposureMode.EVENING_BEFORE) "Fuori la sera prima" else "Fuori la mattina stessa") +
                         ", dalle ${It.time(p.exposeStart)} entro le ${It.time(p.exposeEnd)}",
                     style = MaterialTheme.typography.bodyMedium,
                 )

@@ -83,7 +83,7 @@ object Planner {
                     out += Slot(
                         "$base|PREPARE", SlotKind.PREPARE, p.id, e.collectionDate, at, until,
                         prefix + "Prepara per " + label(e, at).lowercase() + ": " + names,
-                        "Esposizione dalle ${It.time(e.window.start.toLocalTime())}.",
+                        "Da portare fuori dalle ${It.time(e.window.start.toLocalTime())}.",
                     )
                 }
                 if (p.retrieveReminderOn) {
@@ -141,9 +141,9 @@ object Planner {
         val s = e.window.start
         val end = e.window.end
         return if (s.toLocalDate() == end.toLocalDate()) {
-            "Esponi dalle ${It.time(s.toLocalTime())} alle ${It.time(end.toLocalTime())}."
+            "Da portare fuori dalle ${It.time(s.toLocalTime())} alle ${It.time(end.toLocalTime())}."
         } else {
-            "Esponi dalle ${It.time(s.toLocalTime())}, ritiro entro le ${It.time(end.toLocalTime())} di ${It.longDay(end.toLocalDate())}."
+            "Da portare fuori dalle ${It.time(s.toLocalTime())}, ritiro entro le ${It.time(end.toLocalTime())} di ${It.longDay(end.toLocalDate())}."
         }
     }
 

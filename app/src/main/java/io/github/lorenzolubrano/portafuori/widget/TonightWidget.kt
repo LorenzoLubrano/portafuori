@@ -111,7 +111,7 @@ class TonightWidget : AppWidgetProvider() {
                     v.setTextViewText(R.id.widget_bins, names(e))
                     v.setTextViewText(R.id.widget_sub, Planner.windowText(e))
                     if (compact) v.setViewVisibility(R.id.widget_sub, View.GONE)
-                    // done: a check and «Esposti» take the button's place, in both layouts
+                    // done: a check and «Sono fuori» take the button's place, in both layouts
                     if (e.done) v.setViewVisibility(R.id.widget_done_state, View.VISIBLE)
                     if (!e.done) {
                         v.setViewVisibility(R.id.widget_done, View.VISIBLE)
