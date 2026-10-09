@@ -5,7 +5,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PaletteTest {
-    private val schemes = mapOf("chiaro" to LineePalette.light, "scuro" to LineePalette.dark)
+    private val schemes = mapOf(
+        "chiaro" to LineePalette.light, "scuro" to LineePalette.dark,
+        "originale chiaro" to OriginalePalette.light, "originale scuro" to OriginalePalette.dark,
+        "android chiaro" to AndroidFallbackPalette.light, "android scuro" to AndroidFallbackPalette.dark,
+    )
 
     /** Material picks the content colour by matching the background value: equal backgrounds must want the same content. */
     @Test fun equalBackgroundsShareTheirContentColour() {

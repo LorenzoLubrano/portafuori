@@ -36,8 +36,8 @@ val LocalTokens = staticCompositionLocalOf { Tokens(LineeExtraLight, dark = fals
 
 object Styles {
     val Linee = LineeStyle
-    /** Today's look, kept for the second phase (not selectable yet). */
-    val Standard = StandardStyle
+    /** The 1.0.x look, «Originale». */
+    val Originale = OriginaleStyle
     /** The style the app ships with. Phase two reads it from the settings. */
     val current: PortafuoriStyle get() = Linee
 }
