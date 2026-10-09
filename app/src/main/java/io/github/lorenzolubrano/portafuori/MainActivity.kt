@@ -67,9 +67,11 @@ open class MainActivity : ComponentActivity() {
             // Not this style's activity: hand the intent over without drawing. The starting window
             // already showing moves to the new activity.
             super.onCreate(savedInstanceState)
-            val next = Intent(intent).setClass(this, StyleActivities.of(cachedStyle))
+            val target = StyleActivities.of(cachedStyle)
+            val launch = if (StyleActivities.carriesLaunchIntent(restored = savedInstanceState != null)) intent else Intent()
+            val next = Intent(launch).setClass(this, target)
                 // in this task, onto the style's activity if it is already there; a shared file stays readable
-                .setFlags((intent.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION) or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .setFlags((launch.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION) or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             startActivity(next, ActivityOptions.makeCustomAnimation(this, 0, 0).toBundle())
             finish()
             return

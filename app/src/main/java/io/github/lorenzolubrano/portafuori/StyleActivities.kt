@@ -15,4 +15,7 @@ object StyleActivities {
         StyleId.ORIGINALE -> MainActivityOriginale::class.java
         StyleId.ANDROID -> MainActivityAndroid::class.java
     }
+
+    /** A restored activity hands over nothing but itself: its launch intent (a shared calendar) was handled already. */
+    fun carriesLaunchIntent(restored: Boolean): Boolean = !restored
 }

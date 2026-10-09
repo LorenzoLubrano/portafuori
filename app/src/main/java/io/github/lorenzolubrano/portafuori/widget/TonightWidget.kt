@@ -7,9 +7,12 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.drawable.Icon
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
@@ -92,7 +95,18 @@ class TonightWidget : AppWidgetProvider() {
                 }
                 isTonight(e, now) -> {
                     v.setTextViewText(R.id.widget_title, Planner.label(e, now))
-                    v.setImageViewBitmap(R.id.widget_roundels, roundels(context, e.bins, style))
+                    if (Build.VERSION.SDK_INT >= 31) {
+                        // the launcher draws the widget in the phone's day or night colours, while the app's own
+                        // resources follow the app's theme: one bitmap per phone mode, the launcher picks
+                        v.setIcon(
+                            R.id.widget_roundels, "setImageIcon",
+                            Icon.createWithBitmap(roundels(context, e.bins, style, edgeColor(context, style, night = false))),
+                            Icon.createWithBitmap(roundels(context, e.bins, style, edgeColor(context, style, night = true))),
+                        )
+                    } else {
+                        // before Android 12 the app's resources follow the phone, like the launcher
+                        v.setImageViewBitmap(R.id.widget_roundels, roundels(context, e.bins, style, ContextCompat.getColor(context, WidgetStyle.mutedColor(style))))
+                    }
                     v.setContentDescription(R.id.widget_roundels, e.binNames)
                     v.setViewVisibility(R.id.widget_roundels, View.VISIBLE)
                     v.setTextViewText(R.id.widget_bins, names(e))
@@ -129,7 +143,16 @@ class TonightWidget : AppWidgetProvider() {
         private const val MAX_ROUNDELS = 6
 
         /** Tonight's bins as Linee roundels: colour + icon, a dark edge on pale colours, at most [MAX_ROUNDELS]. */
-        private fun roundels(context: Context, bins: List<Bin>, style: StyleId): Bitmap {
+        /** The roundel edge colour of [style] in the phone's day or night colours, whatever the app's own theme. */
+        private fun edgeColor(context: Context, style: StyleId, night: Boolean): Int {
+            val config = Configuration(context.resources.configuration).apply {
+                uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
+                    if (night) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+            }
+            return context.createConfigurationContext(config).getColor(WidgetStyle.mutedColor(style))
+        }
+
+        private fun roundels(context: Context, bins: List<Bin>, style: StyleId, edge: Int): Bitmap {
             val d = context.resources.displayMetrics.density
             val shown = bins.take(MAX_ROUNDELS)
             val size = (28 * d).toInt()
@@ -138,7 +161,6 @@ class TonightWidget : AppWidgetProvider() {
             val bmp = Bitmap.createBitmap(maxOf(1, shown.size * size + (shown.size - 1).coerceAtLeast(0) * gap), height, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bmp)
             val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            val edge = ContextCompat.getColor(context, WidgetStyle.mutedColor(style))
             val top = (height - size) / 2f
             shown.forEachIndexed { i, bin ->
                 val color = bin.entity.colorArgb

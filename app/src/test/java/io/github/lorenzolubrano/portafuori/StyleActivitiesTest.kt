@@ -2,6 +2,7 @@ package io.github.lorenzolubrano.portafuori
 
 import io.github.lorenzolubrano.portafuori.data.StyleId
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.w3c.dom.Element
@@ -41,6 +42,12 @@ class StyleActivitiesTest {
                 assertTrue(theme.removePrefix("@style/") in styles)
             }
         }
+    }
+
+    @Test fun aRestoredActivityDoesNotHandOverItsOldIntent() {
+        // a calendar shared hours ago must not come back for import when the old activity is recreated
+        assertTrue(StyleActivities.carriesLaunchIntent(restored = false))
+        assertFalse(StyleActivities.carriesLaunchIntent(restored = true))
     }
 
     @Test fun eachActivityHandsTheTaskOverToTheNextStyle() {
