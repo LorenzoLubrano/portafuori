@@ -36,6 +36,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.lorenzolubrano.portafuori.ui.theme.extra
 
@@ -46,7 +48,7 @@ fun ShellAction(text: String, enabled: Boolean = true, onClick: () -> Unit) {
     TextButton(
         onClick = onClick,
         enabled = enabled,
-        colors = ButtonDefaults.textButtonColors(contentColor = on, disabledContentColor = on.copy(alpha = 0.38f)),
+        colors = ButtonDefaults.textButtonColors(contentColor = on, disabledContentColor = on.copy(alpha = 0.6f)),
     ) { Text(text) }
 }
 
@@ -66,7 +68,7 @@ fun Page(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text(title, style = MaterialTheme.typography.titleLarge, maxLines = 2) },
+                title = { Text(title, style = MaterialTheme.typography.titleLarge, maxLines = 2, modifier = Modifier.semantics { heading() }) },
                 navigationIcon = {
                     if (onBack != null) {
                         IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro") }
@@ -85,7 +87,7 @@ fun Page(
         bottomBar = bottom,
         contentWindowInsets = WindowInsets(0),
     ) { inner ->
-        val navBar = if (onBack != null) WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() else 0.dp
+        val navBar = if (onBack != null && inner.calculateBottomPadding() == 0.dp) WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() else 0.dp
         Box(Modifier.fillMaxSize()) {
             LazyColumn(
                 state = state,

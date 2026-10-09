@@ -30,16 +30,39 @@
             android:maxLines="1"
             android:ellipsize="end" />
 
-        <ImageView
-            android:id="@+id/widget_roundels"
-            android:importantForAccessibility="no"
-        tools:ignore="ContentDescription"
+        <!-- the roundels shrink only when there is no room, and stay centred on the title's line -->
+
+        <FrameLayout
+
             android:layout_width="0dp"
-            android:layout_height="24dp"
-            android:layout_weight="1"
-            android:adjustViewBounds="true"
-            android:scaleType="fitStart"
-            android:visibility="gone" />
+
+            android:layout_height="wrap_content"
+
+            android:layout_weight="1">
+
+            <ImageView
+
+                android:id="@+id/widget_roundels"
+
+                android:importantForAccessibility="no"
+
+                tools:ignore="ContentDescription"
+
+                android:layout_width="wrap_content"
+
+                android:layout_height="wrap_content"
+
+                android:layout_gravity="start|center_vertical"
+
+                android:maxHeight="24dp"
+
+                android:adjustViewBounds="true"
+
+                android:scaleType="fitCenter"
+
+                android:visibility="gone" />
+
+        </FrameLayout>
 
         <TextView
             android:id="@+id/widget_done"

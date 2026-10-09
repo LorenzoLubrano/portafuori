@@ -384,7 +384,7 @@ fun DaySheet(vm: MainViewModel, b: ProfileBundle, date: LocalDate, holiday: Stri
         Column(Modifier.weight(1f, fill = false).padding(horizontal = 20.dp).padding(bottom = 16.dp).verticalScroll(rememberScrollState())) {
             Text(Wording.eveningTitle(b.eveningOf(collection), b.morning), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
             Text(Wording.ritiroLong(collection), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            holiday?.let { Text("Festivo: $it", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
+            holiday?.let { Text("Festivo: $it", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.bodyMedium) }
             if (evening != null) {
                 Spacer(Modifier.height(6.dp))
                 Text(Wording.from(evening) + ", " + Wording.until(evening), style = MaterialTheme.typography.bodyMedium)

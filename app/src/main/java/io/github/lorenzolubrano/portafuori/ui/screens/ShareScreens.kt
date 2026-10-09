@@ -26,7 +26,6 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,6 +55,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -100,7 +100,6 @@ import io.github.lorenzolubrano.portafuori.ui.Page
 import io.github.lorenzolubrano.portafuori.ui.Route
 import io.github.lorenzolubrano.portafuori.ui.RouteStop
 import io.github.lorenzolubrano.portafuori.ui.SectionTitle
-import io.github.lorenzolubrano.portafuori.ui.Station
 import io.github.lorenzolubrano.portafuori.ui.StopBins
 import io.github.lorenzolubrano.portafuori.ui.UiState
 import io.github.lorenzolubrano.portafuori.ui.Wording
@@ -154,7 +153,10 @@ fun ShareScreen(vm: MainViewModel, state: UiState) {
                 }
             }
             item {
-                Station {
+                Surface(
+                    shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                    contentColor = MaterialTheme.colorScheme.onSurface, modifier = Modifier.fillMaxWidth(),
+                ) { Column(Modifier.padding(18.dp)) {
                     if (qr != null) {
                         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             Image(
@@ -178,7 +180,7 @@ fun ShareScreen(vm: MainViewModel, state: UiState) {
                         context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("${Brand.NAME}", payload))
                         vm.message = "Codice copiato: incollalo in una chat."
                     }
-                }
+                } }
             }
         }
         item { SectionTitle("Importa un calendario") }
@@ -317,8 +319,7 @@ fun ScanScreen(vm: MainViewModel) {
                 }
             } else {
                 Box(
-                    Modifier.fillMaxWidth().aspectRatio(1f).clip(MaterialTheme.shapes.large).background(Color.Black)
-                        .border(4.dp, extra().stationFrame, MaterialTheme.shapes.large),
+                    Modifier.fillMaxWidth().aspectRatio(1f).clip(MaterialTheme.shapes.large).background(Color.Black),
                 ) {
                     AndroidView(
                         modifier = Modifier.fillMaxSize(),

@@ -267,7 +267,7 @@ fun BinEditorScreen(vm: MainViewModel, state: UiState, binId: Long?) {
         item {
             val preview = previewDates(rules, 8)
             Text(
-                if (preview.isEmpty()) "Nessuna data nei prossimi 12 mesi." else preview.joinToString(" · ") { It.weekdayDay(it) },
+                if (preview.isEmpty()) "Nessuna data nei prossimi 12 mesi." else preview.joinToString(" · ") { It.weekdayDay(it).replace(' ', '\u00A0') },
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
@@ -440,7 +440,7 @@ fun RuleEditorDialog(initial: Rule?, onDismiss: () -> Unit, onSave: (Rule) -> Un
                 item {
                     val r = build()
                     Text(
-                        if (r == null) "Completa la regola per vedere le date." else previewDates(listOf(r), 8).joinToString(" · ") { It.weekdayDay(it) }.ifEmpty { "Nessuna data nei prossimi 12 mesi." },
+                        if (r == null) "Completa la regola per vedere le date." else previewDates(listOf(r), 8).joinToString(" · ") { It.weekdayDay(it).replace(' ', '\u00A0') }.ifEmpty { "Nessuna data nei prossimi 12 mesi." },
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     r?.let { Text(It.describe(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 4.dp)) }
