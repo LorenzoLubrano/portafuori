@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -74,6 +75,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.lorenzolubrano.portafuori.data.Bin
@@ -233,7 +235,19 @@ fun SegmentedChoice(options: List<String>, selected: Int, onSelect: (Int) -> Uni
                         onClick = { onSelect(i) },
                         shape = SegmentedButtonDefaults.itemShape(index = i, count = options.size),
                         modifier = Modifier.heightIn(min = 48.dp),
-                    ) { Text(label, style = style) }
+                        // Material measures its label slot on the whole segment and then shifts it by the check mark,
+                        // so a label that only fits beside the mark was cut: the mark sits in the label instead
+                        icon = {},
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (i == selected) {
+                                Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                            }
+                            // the same width selected or not, so the row keeps its height when the choice changes
+                            Text(label, style = style, textAlign = TextAlign.Center, modifier = Modifier.widthIn(max = segment - 52.dp))
+                        }
+                    }
                 }
             }
         } else {
