@@ -108,7 +108,7 @@ fun ReliabilityScreen(vm: MainViewModel) {
     val mine = GUIDES.firstOrNull { g -> g.match.any { brand.contains(it) } } ?: GUIDES.last()
     var expanded by remember { mutableStateOf(mine.brand) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { vm.refresh() }
-    val fmt = remember { DateTimeFormatter.ofPattern("EEE d/MM HH:mm", io.github.lorenzolubrano.portafuori.rules.It.locale) }
+    val fmt = remember { DateTimeFormatter.ofPattern("EEE d/MM H:mm", io.github.lorenzolubrano.portafuori.rules.It.locale) }
 
     fun go(intent: Intent?) {
         runCatching { context.startActivity(intent ?: Reliability.appDetails(context)) }

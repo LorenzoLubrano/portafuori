@@ -209,7 +209,7 @@ private fun WeekLines(b: ProfileBundle, start: LocalDate, today: LocalDate, nigh
                             .clip(MaterialTheme.shapes.small)
                             .background(if (tonight) MaterialTheme.colorScheme.primary else Color.Transparent)
                             .clickable { onOpen(d) }
-                            .semantics { contentDescription = Wording.eveningTitle(d) + holiday.festivo() },
+                            .semantics { contentDescription = Wording.eveningTitle(d, b.morning) + holiday.festivo() },
                         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
                     ) {
                         val ink = when {
@@ -317,7 +317,7 @@ private fun MonthGrid(b: ProfileBundle, month: YearMonth, gridStart: LocalDate, 
                             .then(if (d == today) Modifier.border(3.dp, extra().stationFrame, MaterialTheme.shapes.small) else Modifier)
                             .clickable { onOpen(d) }
                             .semantics {
-                                contentDescription = Wording.eveningTitle(d) + holiday.festivo() + if (active.isEmpty()) "" else ": " + active.joinToString { it.name }
+                                contentDescription = Wording.eveningTitle(d, b.morning) + holiday.festivo() + if (active.isEmpty()) "" else ": " + active.joinToString { it.name }
                             }
                             .padding(4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -373,7 +373,7 @@ fun DaySheet(vm: MainViewModel, b: ProfileBundle, date: LocalDate, holiday: Stri
         contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal) },
     ) {
         Column(Modifier.weight(1f, fill = false).padding(horizontal = 20.dp).padding(bottom = 16.dp).verticalScroll(rememberScrollState())) {
-            Text(Wording.eveningTitle(b.eveningOf(collection)), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
+            Text(Wording.eveningTitle(b.eveningOf(collection), b.morning), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
             Text(Wording.ritiroLong(collection), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             holiday?.let { Text("Festivo: $it", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
             if (evening != null) {

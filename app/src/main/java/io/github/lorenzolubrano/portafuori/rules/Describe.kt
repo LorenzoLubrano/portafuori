@@ -15,7 +15,7 @@ object It {
     private val full = DateTimeFormatter.ofPattern("dd/MM/yyyy", locale)
     private val weekdayDay = DateTimeFormatter.ofPattern("EEE d/MM", locale)
     private val longDay = DateTimeFormatter.ofPattern("EEEE d MMMM", locale)
-    private val time = DateTimeFormatter.ofPattern("HH:mm", locale)
+    private val time = DateTimeFormatter.ofPattern("H:mm", locale)
     private val month = DateTimeFormatter.ofPattern("LLLL yyyy", locale)
 
     fun dayName(d: DayOfWeek): String = when (d) {

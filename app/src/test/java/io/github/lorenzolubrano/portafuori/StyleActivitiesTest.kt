@@ -1,5 +1,6 @@
 package io.github.lorenzolubrano.portafuori
 
+import android.content.Intent
 import io.github.lorenzolubrano.portafuori.data.StyleId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -48,6 +49,28 @@ class StyleActivitiesTest {
         // a calendar shared hours ago must not come back for import when the old activity is recreated
         assertTrue(StyleActivities.carriesLaunchIntent(restored = false))
         assertFalse(StyleActivities.carriesLaunchIntent(restored = true))
+    }
+
+    @Test fun aChangeOfStyleReopensOnceInTheNewStyle() {
+        assertTrue(StyleActivities.reopens(MainActivity::class.java, StyleId.ORIGINALE, finishing = false))
+        assertFalse(StyleActivities.reopens(MainActivityOriginale::class.java, StyleId.ORIGINALE, finishing = false))
+        // a second quick change, while this activity is already on its way out, must not stack another one:
+        // the activity that opens next reads the latest style and moves on by itself
+        assertFalse(StyleActivities.reopens(MainActivity::class.java, StyleId.ANDROID, finishing = true))
+    }
+
+    @Test fun aFileFromAnotherAppOpensOnTopWithoutClosingThatApp() {
+        val read = Intent.FLAG_GRANT_READ_URI_PERMISSION
+        // opened from a chat: on top of the chat, which stays where it is, and the file stays readable
+        for (action in listOf(Intent.ACTION_SEND, Intent.ACTION_VIEW)) {
+            assertEquals(read or Intent.FLAG_ACTIVITY_SINGLE_TOP, StyleActivities.forwardFlags(action, read or Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
+        // the app's own ways in (launcher, widget, notification) come back to the style's activity already there
+        assertEquals(
+            Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP,
+            StyleActivities.forwardFlags(Intent.ACTION_MAIN, Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+        assertEquals(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP, StyleActivities.forwardFlags(null, 0))
     }
 
     @Test fun eachActivityHandsTheTaskOverToTheNextStyle() {

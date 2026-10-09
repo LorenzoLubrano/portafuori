@@ -1,10 +1,12 @@
 package io.github.lorenzolubrano.portafuori.ui
 
+import io.github.lorenzolubrano.portafuori.rules.It
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
+import java.util.Locale
 
 class WordingTest {
     private val wed = LocalDate.of(2026, 10, 7)
@@ -13,6 +15,20 @@ class WordingTest {
         assertEquals("Dalle 20:00", Wording.from(LocalTime.of(20, 0)))
         assertEquals("Dall'1:30", Wording.from(LocalTime.of(1, 30)))
         assertEquals("Dalle 5:05", Wording.from(LocalTime.of(5, 5)))
+    }
+
+    @Test fun timesHaveNoLeadingZeroAndLatinDigits() {
+        assertEquals("6:00", It.time(LocalTime.of(6, 0)))
+        assertEquals("20:30", It.time(LocalTime.of(20, 30)))
+        // a phone set to a language with other digits still reads the app's Italian times
+        val before = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.forLanguageTag("ar-EG"))
+            assertEquals("6:05", Wording.hm(LocalTime.of(6, 5)))
+            assertEquals("6:05", It.time(LocalTime.of(6, 5)))
+        } finally {
+            Locale.setDefault(before)
+        }
     }
 
     @Test fun untilTime() {
@@ -34,6 +50,8 @@ class WordingTest {
         assertEquals("ritiro gio 8", Wording.ritiro(LocalDate.of(2026, 10, 8)))
         assertEquals("ritiro giovedì 8", Wording.ritiroLong(LocalDate.of(2026, 10, 8)))
         assertEquals("Mercoledì 7 sera", Wording.eveningTitle(wed))
+        // bins out the same morning: the day is a morning, not an evening
+        assertEquals("Giovedì 8 mattina", Wording.eveningTitle(LocalDate.of(2026, 10, 8), morning = true))
     }
 
     @Test fun weekTitles() {

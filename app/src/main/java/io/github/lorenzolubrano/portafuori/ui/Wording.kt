@@ -9,7 +9,7 @@ import java.time.format.TextStyle
 
 /** Texts the screens compute (spec section 6). Plain Kotlin so they are unit-tested. */
 object Wording {
-    fun hm(t: LocalTime): String = "${t.hour}:" + "%02d".format(t.minute)
+    fun hm(t: LocalTime): String = It.time(t)
 
     fun from(e: Evening): String = from(e.window.start.toLocalTime())
     fun from(t: LocalTime): String = if (t.hour == 1) "Dall'${hm(t)}" else "Dalle ${hm(t)}"
@@ -31,7 +31,7 @@ object Wording {
 
     fun ritiro(d: LocalDate) = "ritiro ${It.dayName(d.dayOfWeek).take(3)} ${d.dayOfMonth}"
     fun ritiroLong(d: LocalDate) = "ritiro ${It.dayName(d.dayOfWeek)} ${d.dayOfMonth}"
-    fun eveningTitle(d: LocalDate) = It.dayName(d.dayOfWeek).replaceFirstChar { it.uppercase() } + " ${d.dayOfMonth} sera"
+    fun eveningTitle(d: LocalDate, morning: Boolean = false) = It.dayName(d.dayOfWeek).replaceFirstChar { it.uppercase() } + " ${d.dayOfMonth} " + if (morning) "mattina" else "sera"
 
     private fun elided(day: Int) = day == 1 || day == 8 || day == 11
     private fun monthName(d: LocalDate) = d.month.getDisplayName(TextStyle.FULL, It.locale)

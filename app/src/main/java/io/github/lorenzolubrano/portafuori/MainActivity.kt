@@ -69,9 +69,7 @@ open class MainActivity : ComponentActivity() {
             super.onCreate(savedInstanceState)
             val target = StyleActivities.of(cachedStyle)
             val launch = if (StyleActivities.carriesLaunchIntent(restored = savedInstanceState != null)) intent else Intent()
-            val next = Intent(launch).setClass(this, target)
-                // in this task, onto the style's activity if it is already there; a shared file stays readable
-                .setFlags((launch.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION) or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            val next = Intent(launch).setClass(this, target).setFlags(StyleActivities.forwardFlags(launch.action, launch.flags))
             startActivity(next, ActivityOptions.makeCustomAnimation(this, 0, 0).toBundle())
             finish()
             return
@@ -132,7 +130,7 @@ open class MainActivity : ComponentActivity() {
                 },
             )
         }
-        if (javaClass != StyleActivities.of(style)) {
+        if (StyleActivities.reopens(javaClass, style, finishing = isFinishing)) {
             // A new style lives in its own activity: reopen there, on the same tab
             val next = Intent(this, StyleActivities.of(style))
             if (vm.tab == Screen.More) next.putExtra(Notifications.EXTRA_OPEN, "more")

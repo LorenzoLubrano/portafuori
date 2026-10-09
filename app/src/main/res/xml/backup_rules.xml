@@ -5,4 +5,7 @@
     <include domain="database" path="." requireFlags="deviceToDeviceTransfer" />
     <include domain="file" path="datastore/" requireFlags="clientSideEncryption" />
     <include domain="file" path="datastore/" requireFlags="deviceToDeviceTransfer" />
+    <!-- the synchronous copy of theme and style, so the first start after a restore is already in the right style -->
+    <include domain="sharedpref" path="ui.xml" requireFlags="clientSideEncryption" />
+    <include domain="sharedpref" path="ui.xml" requireFlags="deviceToDeviceTransfer" />
 </full-backup-content>
