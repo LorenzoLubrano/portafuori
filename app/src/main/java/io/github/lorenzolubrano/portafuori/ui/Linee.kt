@@ -46,6 +46,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -74,22 +75,25 @@ fun Roundel(bin: Bin, size: Dp = 44.dp, ring: Boolean = true) {
     ) { BinBadge(bin.entity.colorArgb, bin.entity.iconKey, size) }
 }
 
-/** Tonight's container: white enamel with a thick ink frame. */
+/** Tonight's container: white enamel with a thick ink frame. Once tonight is done it steps back to a thin line. */
 @Composable
-fun Station(content: @Composable ColumnScope.() -> Unit) {
+fun Station(quiet: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
     Surface(
         shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        border = BorderStroke(4.dp, extra().stationFrame),
+        border = if (quiet) BorderStroke(2.dp, extra().line) else BorderStroke(4.dp, extra().stationFrame),
         modifier = Modifier.fillMaxWidth(),
     ) { Column(Modifier.padding(18.dp), content = content) }
 }
 
 /** Tonight's bins arriving at the station as coloured lines. */
 @Composable
-fun LinesIn(bins: List<Bin>) {
-    Row(Modifier.padding(start = 30.dp).height(22.dp).clearAndSetSemantics {}, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+fun LinesIn(bins: List<Bin>, quiet: Boolean = false) {
+    Row(
+        Modifier.padding(start = 30.dp).height(22.dp).graphicsLayer { alpha = if (quiet) 0.35f else 1f }.clearAndSetSemantics {},
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
         bins.take(8).forEach { Box(Modifier.width(8.dp).fillMaxHeight().background(it.entity.colorArgb.asColor())) }
     }
 }

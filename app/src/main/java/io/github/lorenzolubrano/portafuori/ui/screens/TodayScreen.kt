@@ -136,8 +136,8 @@ fun TodayScreen(vm: MainViewModel, state: UiState) {
                     }
                 }
                 tonight -> Column {
-                    LinesIn(next!!.bins)
-                    Station { TonightStop(vm, next, now) }
+                    LinesIn(next!!.bins, quiet = next.done)
+                    Station(quiet = next.done) { TonightStop(vm, next, now) }
                 }
                 else -> Station {
                     Text("Stasera niente da portare fuori", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.semantics { heading() })
